@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>按钮点击测试</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    th { background: #f0f0f0; }
+    button { padding: 6px 12px; margin: 2px; cursor: pointer; border: none; border-radius: 4px; color: white; }
+    .btn-warning { background: #ff9800; }
+    .btn-success { background: #4caf50; }
+    .btn-danger { background: #f44336; }
+    .btn-primary { background: #1989fa; }
+    #log { background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-top: 20px; max-height: 300px; overflow-y: auto; }
+    .log-item { margin: 5px 0; padding: 5px; border-bottom: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <h1>商品管理按钮测试</h1>
+  <p>测试按钮是否可以点击并触发函数</p>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>商品名称</th>
+        <th>价格</th>
+        <th>状态</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>精品茶叶礼盒</td>
+        <td>¥199</td>
+        <td><span style="color: green;">上架</span></td>
+        <td>
+          <button class="btn-primary" onclick="editProduct(1, '精品茶叶礼盒')">编辑</button>
+          <button class="btn-warning" onclick="toggleProductStatus(1, 0, '精品茶叶礼盒')">下架</button>
+          <button class="btn-danger" onclick="deleteProduct(1, '精品茶叶礼盒')">删除</button>
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>智能手表</td>
+        <td>¥699</td>
+        <td><span style="color: red;">下架</span></td>
+        <td>
+          <button class="btn-primary" onclick="editProduct(2, '智能手表')">编辑</button>
+          <button class="btn-success" onclick="toggleProductStatus(2, 1, '智能手表')">上架</button>
+          <button class="btn-danger" onclick="deleteProduct(2, '智能手表')">删除</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <div id="log"><strong>操作日志:</strong></div>
+  
+  <script>
+    const API_BASE = 'http://localhost:3010/api';
+    let authToken = '';
+    
+    function log(msg, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      const colors = { info: '#333', success: 'green', error: 'red', warning: 'orange' };
+      logDiv.innerHTML += `<div class="log-item" style="color: ${colors[type] || '#333'}">[${time}] ${msg}</div>`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    
+    async function login() {
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+        const data = await res.json();
+        if (data.code === 200) {
+          authToken = data.data.token;
+          log('✅ 登录成功', 'success');
+        } else {
+          log('❌ 登录失败：' + data.message, 'error');
+        }
+      } catch (error) {
+        log('❌ 登录错误：' + error.message, 'error');
+      }
+    }
+    
+    async function fetchWithAuth(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return res.json();
+    }
+    
+    function editProduct(id, name) {
+      log(`✏️ 点击编辑：商品 ${id} - ${name}`, 'info');
+      alert(`编辑商品：${name}\n(功能开发中)`);
+    }
+    
+    async function toggleProductStatus(id, newStatus, name) {
+      const action = newStatus === 1 ? '上架' : '下架';
+      log(`🔄 准备${action}：商品 ${id} - ${name}`, 'info');
+      
+      if (!confirm(`确定要${action}商品"${name}"吗？`)) {
+        log('⚠️ 用户取消操作', 'warning');
+        return;
+      }
+      
+      log(`📡 发送${action}请求...`, 'info');
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (res.code === 200) {
+          log(`✅ ${action}成功！`, 'success');
+          alert(`${action}成功！`);
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          log(`❌ ${action}失败：` + res.message, 'error');
+          alert(`${action}失败：` + res.message);
+        }
+      } catch (error) {
+        log(`❌ ${action}错误：` + error.message, 'error');
+        alert(`${action}错误：` + error.message);
+      }
+    }
+    
+    async function deleteProduct(id, name) {
+      log(`🗑️ 准备删除：商品 ${id} - ${name}`, 'info');
+      
+      const confirmed = confirm(`⚠️ 确定要删除商品"${name}"吗？\n\n删除后将移入回收站，可从回收站恢复或彻底删除。`);
+      if (!confirmed) {
+        log('⚠️ 用户取消操作', 'warning');
+        return;
+      }
+      
+      log(`📡 发送删除请求...`, 'info');
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}`, { method: 'DELETE' });
+        
+        if (res.code === 200) {
+          log(`✅ 删除成功，商品已移入回收站`, 'success');
+          alert('✅ 商品已移入回收站');
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          log(`❌ 删除失败：` + res.message, 'error');
+          alert(`❌ 删除失败：` + res.message);
+        }
+      } catch (error) {
+        log(`❌ 删除错误：` + error.message, 'error');
+        alert(`❌ 删除错误：` + error.message);
+      }
+    }
+    
+    // 页面加载时自动登录
+    window.onload = function() {
+      log('🚀 页面加载完成', 'info');
+      log('📝 点击按钮测试功能...', 'info');
+      login();
+    };
+  </script>
+</body>
+</html>

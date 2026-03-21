@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分销系统管理后台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; }
+    .header { background: linear-gradient(135deg, #1989fa 0%, #0e6fd6 100%); color: white; padding: 20px 30px; }
+    .header h1 { font-size: 24px; margin-bottom: 5px; }
+    .nav-tabs { display: flex; background: white; padding: 0 30px; border-bottom: 1px solid #e8e8e8; }
+    .nav-tab { padding: 16px 24px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: #666; }
+    .nav-tab:hover { color: #1989fa; background: #f7f8fa; }
+    .nav-tab.active { color: #1989fa; border-bottom-color: #1989fa; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 30px; }
+    .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .section.active { display: block; }
+    .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin: 2px; }
+    .btn-primary { background: #1989fa; color: white; }
+    .btn-success { background: #4caf50; color: white; }
+    .btn-warning { background: #ff9800; color: white; }
+    .btn-danger { background: #f44336; color: white; }
+    .btn-sm { padding: 4px 8px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+    th { background: #f7f8fa; color: #666; font-weight: 600; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+    .badge-success { background: #e8f5e9; color: #4caf50; }
+    .badge-danger { background: #ffebee; color: #f44336; }
+    .badge-info { background: #e3f2fd; color: #1989fa; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 分销系统管理后台</h1>
+    <p>实时数据统计与管理系统</p>
+  </div>
+  
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('products')">📦 商品管理</div>
+  </div>
+  
+  <div class="container">
+    <div id="products" class="section active">
+      <div class="section-title" style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">📦 商品管理</div>
+      <div id="productList"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3010/api';
+    let authToken = '';
+    let products = [];
+
+    // 页面加载时执行
+    window.onload = async function() {
+      console.log('✅ 页面加载完成');
+      await login();
+      await loadProducts();
+    };
+
+    // 切换标签
+    function switchTab(tabId) {
+      document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // 登录
+    async function login() {
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+        const data = await res.json();
+        if (data.code === 200) {
+          authToken = data.data.token;
+          console.log('✅ 登录成功');
+        } else {
+          console.error('❌ 登录失败:', data.message);
+          alert('登录失败：' + data.message);
+        }
+      } catch (error) {
+        console.error('❌ 登录错误:', error);
+        alert('登录错误：' + error.message);
+      }
+    }
+
+    // API 请求
+    async function fetchWithAuth(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return res.json();
+    }
+
+    // 加载商品列表
+    async function loadProducts() {
+      console.log('🔄 加载商品列表...');
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products`);
+        console.log('API 响应:', res);
+        
+        if (res.code === 200) {
+          products = res.data.list;
+          console.log('✅ 加载成功，商品数量:', products.length);
+          renderProducts();
+        } else {
+          console.error('❌ 加载失败:', res.message);
+          document.getElementById('productList').innerHTML = '<div style="color: red; padding: 20px;">加载失败：' + res.message + '</div>';
+        }
+      } catch (error) {
+        console.error('❌ 加载错误:', error);
+        document.getElementById('productList').innerHTML = '<div style="color: red; padding: 20px;">加载错误：' + error.message + '</div>';
+      }
+    }
+
+    // 渲染商品列表
+    function renderProducts() {
+      const html = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>商品名称</th>
+              <th>价格</th>
+              <th>库存</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${products.map(p => `
+              <tr>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>¥${p.currentPrice}</td>
+                <td>${p.stock}</td>
+                <td><span class="badge ${p.status === 1 ? 'badge-success' : 'badge-danger'}">${p.status === 1 ? '上架' : '下架'}</span></td>
+                <td>
+                  <button class="btn btn-primary btn-sm" onclick="editProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')">编辑</button>
+                  ${p.status === 1 
+                    ? `<button class="btn btn-warning btn-sm" onclick="toggleProductStatus(${p.id}, 0, '${p.name.replace(/'/g, "\\'")}')">下架</button>`
+                    : `<button class="btn btn-success btn-sm" onclick="toggleProductStatus(${p.id}, 1, '${p.name.replace(/'/g, "\\'")}')">上架</button>`
+                  }
+                  <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')">删除</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      document.getElementById('productList').innerHTML = html;
+      console.log('✅ 商品列表渲染完成');
+    }
+
+    // 编辑商品
+    function editProduct(id, name) {
+      console.log('✏️ 编辑商品:', id, name);
+      const product = products.find(p => p.id === id);
+      if (!product) {
+        alert('商品不存在');
+        return;
+      }
+      
+      const newName = prompt('商品名称:', product.name);
+      if (newName === null) return;
+      
+      const newPrice = prompt('商品价格:', product.currentPrice);
+      if (newPrice === null) return;
+      
+      const newStock = prompt('商品库存:', product.stock);
+      if (newStock === null) return;
+      
+      const newCommissionType = prompt('佣金类型 (percentage/fixed):', product.commissionType);
+      if (newCommissionType === null) return;
+      
+      const newCommissionValue = prompt('佣金值:', product.commissionValue);
+      if (newCommissionValue === null) return;
+      
+      updateProduct(id, {
+        name: newName,
+        currentPrice: parseFloat(newPrice),
+        stock: parseInt(newStock),
+        commissionType: newCommissionType,
+        commissionValue: parseFloat(newCommissionValue)
+      });
+    }
+
+    // 更新商品
+    async function updateProduct(id, data) {
+      console.log('📡 更新商品:', id, data);
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data)
+        });
+        
+        if (res.code === 200) {
+          console.log('✅ 更新成功');
+          alert('✅ 商品更新成功');
+          await loadProducts();
+        } else {
+          console.error('❌ 更新失败:', res.message);
+          alert('❌ 更新失败：' + res.message);
+        }
+      } catch (error) {
+        console.error('❌ 更新错误:', error);
+        alert('❌ 更新错误：' + error.message);
+      }
+    }
+
+    // 上架/下架商品
+    async function toggleProductStatus(id, newStatus, name) {
+      const action = newStatus === 1 ? '上架' : '下架';
+      console.log(`🔄 准备${action}:`, id, name);
+      
+      if (!confirm(`确定要${action}商品"${name}"吗？`)) {
+        console.log('⚠️ 用户取消操作');
+        return;
+      }
+      
+      console.log(`📡 发送${action}请求...`);
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({ status: newStatus })
+        });
+        
+        console.log('API 响应:', res);
+        
+        if (res.code === 200) {
+          console.log(`✅ ${action}成功`);
+          alert(`${action}成功！`);
+          await loadProducts(); // 重新加载列表
+        } else {
+          console.error(`❌ ${action}失败:`, res.message);
+          alert(`${action}失败：` + res.message);
+        }
+      } catch (error) {
+        console.error(`❌ ${action}错误:`, error);
+        alert(`${action}错误：` + error.message);
+      }
+    }
+
+    // 删除商品
+    async function deleteProduct(id, name) {
+      console.log('🗑️ 准备删除:', id, name);
+      
+      const confirmed = confirm(`⚠️ 确定要删除商品"${name}"吗？\n\n删除后将移入回收站，可从回收站恢复或彻底删除。`);
+      if (!confirmed) {
+        console.log('⚠️ 用户取消操作');
+        return;
+      }
+      
+      console.log('📡 发送删除请求...');
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}`, { method: 'DELETE' });
+        
+        console.log('API 响应:', res);
+        
+        if (res.code === 200) {
+          console.log('✅ 删除成功');
+          alert('✅ 商品已移入回收站');
+          await loadProducts(); // 重新加载列表
+        } else {
+          console.error('❌ 删除失败:', res.message);
+          alert('❌ 删除失败：' + res.message);
+        }
+      } catch (error) {
+        console.error('❌ 删除错误:', error);
+        alert('❌ 删除错误：' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

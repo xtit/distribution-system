@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>按钮测试</title>
+  <style>
+    button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+    .btn-warning { background: #ff9800; color: white; border: none; }
+    .btn-success { background: #4caf50; color: white; border: none; }
+    .btn-danger { background: #f44336; color: white; border: none; }
+  </style>
+</head>
+<body>
+  <h1>商品管理按钮测试</h1>
+  
+  <table border="1" cellpadding="10">
+    <thead>
+      <tr>
+        <th>商品</th>
+        <th>状态</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>测试商品 1</td>
+        <td>上架</td>
+        <td>
+          <button class="btn-warning" onclick="toggleProductStatus(1, 0)">下架</button>
+          <button class="btn-danger" onclick="deleteProduct(1, '测试商品 1')">删除</button>
+        </td>
+      </tr>
+      <tr>
+        <td>测试商品 2</td>
+        <td>下架</td>
+        <td>
+          <button class="btn-success" onclick="toggleProductStatus(2, 1)">上架</button>
+          <button class="btn-danger" onclick="deleteProduct(2, '测试商品 2')">删除</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <div id="log" style="margin-top: 20px; padding: 10px; background: #f0f0f0;"></div>
+  
+  <script>
+    const API_BASE = 'http://localhost:3010/api';
+    let authToken = '';
+    
+    async function login() {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'admin', password: 'admin123' })
+      });
+      const data = await res.json();
+      if (data.code === 200) {
+        authToken = data.data.token;
+        log('✅ 登录成功');
+      }
+    }
+    
+    async function fetchWithAuth(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return res.json();
+    }
+    
+    async function toggleProductStatus(id, newStatus) {
+      const action = newStatus === 1 ? '上架' : '下架';
+      if (!confirm(`确定要${action}这个商品吗？`)) return;
+      
+      log(`🔄 正在${action}商品 ${id}...`);
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (res.code === 200) {
+          log(`✅ ${action}成功！`);
+          alert(`${action}成功`);
+        } else {
+          log(`❌ ${action}失败：` + res.message);
+          alert(`${action}失败：` + res.message);
+        }
+      } catch (error) {
+        log(`❌ ${action}失败：` + error.message);
+        alert(`${action}失败：` + error.message);
+      }
+    }
+    
+    async function deleteProduct(id, name) {
+      const confirmed = confirm(`⚠️ 确定要删除商品"${name}"吗？\n\n删除后将移入回收站，可从回收站恢复或彻底删除。`);
+      if (!confirmed) return;
+      
+      log(`🗑️ 正在删除商品 ${name}...`);
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}`, { method: 'DELETE' });
+        
+        if (res.code === 200) {
+          log(`✅ 删除成功，商品已移入回收站`);
+          alert('✅ 商品已移入回收站');
+        } else {
+          log(`❌ 删除失败：` + res.message);
+          alert(`❌ 删除失败：` + res.message);
+        }
+      } catch (error) {
+        log(`❌ 删除失败：` + error.message);
+        alert(`❌ 删除失败：` + error.message);
+      }
+    }
+    
+    function log(msg) {
+      const logDiv = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      logDiv.innerHTML += `<div>[${time}] ${msg}</div>`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    
+    // 页面加载时自动登录
+    window.onload = login;
+  </script>
+</body>
+</html>

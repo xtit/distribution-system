@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分销系统管理后台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.12/lib/index.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; }
+    .header { background: linear-gradient(135deg, #1989fa 0%, #0e6fd6 100%); color: white; padding: 20px 30px; }
+    .header h1 { font-size: 24px; margin-bottom: 5px; }
+    .nav-tabs { display: flex; background: white; padding: 0 30px; border-bottom: 1px solid #e8e8e8; }
+    .nav-tab { padding: 16px 24px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: #666; transition: all 0.2s; }
+    .nav-tab:hover { color: #1989fa; background: #f7f8fa; }
+    .nav-tab.active { color: #1989fa; border-bottom-color: #1989fa; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 30px; }
+    .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .section.active { display: block; }
+    .section-title { font-size: 18px; font-weight: bold; margin-bottom: 16px; color: #333; }
+    
+    /* 按钮样式 - 确保可点击 */
+    .btn { 
+      padding: 8px 16px; 
+      border: none; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      font-size: 13px; 
+      margin: 3px;
+      transition: all 0.2s;
+      pointer-events: auto;
+      position: relative;
+      z-index: 100;
+      display: inline-block;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: #1989fa; color: white; }
+    .btn-success { background: #07c160; color: white; }
+    .btn-warning { background: #ff976a; color: white; }
+    .btn-danger { background: #ee0a24; color: white; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; margin: 2px; }
+    
+    /* 表格样式 */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+    th { background: #f7f8fa; color: #666; font-weight: 600; }
+    td { font-size: 14px; }
+    tr:hover { background: #f7f8fa; }
+    /* 确保按钮可点击 */
+    td button { pointer-events: auto !important; z-index: 100 !important; }
+    
+    /* 徽章样式 */
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-block; }
+    .badge-success { background: #e8f5e9; color: #07c160; }
+    .badge-danger { background: #ffebeb; color: #ee0a24; }
+    
+    /* 操作按钮组 */
+    .action-buttons { display: flex; gap: 4px; align-items: center; }
+    .action-buttons button { pointer-events: auto !important; z-index: 100 !important; }
+    
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+    .loading-state { text-align: center; padding: 40px 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 分销系统管理后台</h1>
+    <p>实时数据统计与管理系统</p>
+  </div>
+  
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('products')">📦 商品管理</div>
+  </div>
+  
+  <div class="container">
+    <!-- 商品管理 -->
+    <div id="products" class="section active">
+      <div class="section-title">📦 商品管理</div>
+      <div style="margin-bottom: 16px;">
+        <button class="btn btn-primary" onclick="showAddProduct()">+ 添加商品</button>
+      </div>
+      <div id="productList">
+        <div class="loading-state">加载中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引入 Vant UI -->
+  <script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
+  
+  <script>
+    const API_BASE = 'http://localhost:3010/api';
+    let authToken = '';
+    let products = [];
+
+    // 页面加载时执行
+    window.addEventListener('DOMContentLoaded', async function() {
+      console.log('✅ 页面加载完成');
+      await login();
+      await loadProducts();
+    });
+
+    // 切换标签
+    function switchTab(tabId) {
+      document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+      if (tabId === 'products') loadProducts();
+    }
+
+    // 登录
+    async function login() {
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+        const data = await res.json();
+        if (data.code === 200) {
+          authToken = data.data.token;
+          console.log('✅ 登录成功');
+        } else {
+          vant.Toast.fail('登录失败：' + data.message);
+        }
+      } catch (error) {
+        vant.Toast.fail('登录错误：' + error.message);
+      }
+    }
+
+    // API 请求
+    async function fetchWithAuth(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return res.json();
+    }
+
+    // 加载商品列表
+    async function loadProducts() {
+      const container = document.getElementById('productList');
+      container.innerHTML = '<div class="loading-state">加载中...</div>';
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products`);
+        console.log('API 响应:', res);
+        
+        if (res.code === 200) {
+          products = res.data.list;
+          console.log('商品数量:', products.length);
+          renderProducts();
+        } else {
+          vant.Toast.fail('加载失败：' + res.message);
+          container.innerHTML = '<div class="empty-state">加载失败</div>';
+        }
+      } catch (error) {
+        console.error('加载错误:', error);
+        vant.Toast.fail('加载错误：' + error.message);
+        container.innerHTML = '<div class="empty-state">加载错误</div>';
+      }
+    }
+
+    // 渲染商品列表
+    function renderProducts() {
+      const container = document.getElementById('productList');
+      
+      if (products.length === 0) {
+        container.innerHTML = '<div class="empty-state">暂无商品</div>';
+        return;
+      }
+      
+      const html = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>商品名称</th>
+              <th>价格</th>
+              <th>库存</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${products.map(p => `
+              <tr>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>¥${p.currentPrice}</td>
+                <td>${p.stock}</td>
+                <td><span class="badge ${p.status === 1 ? 'badge-success' : 'badge-danger'}">${p.status === 1 ? '上架' : '下架'}</span></td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn btn-primary btn-sm" onclick="editProduct(${p.id})">编辑</button>
+                    ${p.status === 1 
+                      ? `<button class="btn btn-warning btn-sm" onclick="toggleProductStatus(${p.id}, 0)">下架</button>`
+                      : `<button class="btn btn-success btn-sm" onclick="toggleProductStatus(${p.id}, 1)">上架</button>`
+                    }
+                    <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">删除</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      container.innerHTML = html;
+      console.log('商品列表渲染完成');
+    }
+
+    // 添加商品
+    function showAddProduct() {
+      vant.Dialog.alert({
+        title: '添加商品',
+        message: '功能开发中...',
+        confirmButtonText: '知道了'
+      });
+    }
+
+    // 编辑商品
+    async function editProduct(id) {
+      console.log('编辑商品:', id);
+      const product = products.find(p => p.id === id);
+      if (!product) {
+        vant.Toast.fail('商品不存在');
+        return;
+      }
+      
+      vant.Dialog({
+        title: '编辑商品',
+        message: `
+          <div style="text-align: left; padding: 20px;">
+            <div style="margin-bottom: 15px;">
+              <label style="display: block; margin-bottom: 5px; color: #666;">商品名称</label>
+              <input type="text" id="editName" value="${product.name}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+            </div>
+            <div style="margin-bottom: 15px;">
+              <label style="display: block; margin-bottom: 5px; color: #666;">价格</label>
+              <input type="number" id="editPrice" value="${product.currentPrice}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+            </div>
+            <div style="margin-bottom: 15px;">
+              <label style="display: block; margin-bottom: 5px; color: #666;">库存</label>
+              <input type="number" id="editStock" value="${product.stock}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '保存',
+        cancelButtonText: '取消',
+        allowHtml: true
+      }).then(async () => {
+        const name = document.getElementById('editName').value;
+        const price = parseFloat(document.getElementById('editPrice').value);
+        const stock = parseInt(document.getElementById('editStock').value);
+        await updateProduct(id, { name, currentPrice: price, stock });
+      }).catch(() => {});
+    }
+
+    // 更新商品
+    async function updateProduct(id, data) {
+      vant.Toast.loading({ message: '保存中...', forbidClick: true });
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data)
+        });
+        
+        vant.Toast.clear();
+        
+        if (res.code === 200) {
+          vant.Toast.success('保存成功');
+          await loadProducts();
+        } else {
+          vant.Toast.fail('保存失败：' + res.message);
+        }
+      } catch (error) {
+        vant.Toast.clear();
+        vant.Toast.fail('保存错误：' + error.message);
+      }
+    }
+
+    // 上架/下架商品
+    async function toggleProductStatus(id, newStatus) {
+      console.log('上架/下架:', id, newStatus);
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      
+      const action = newStatus === 1 ? '上架' : '下架';
+      
+      vant.Dialog({
+        title: '确认操作',
+        message: `确定要${action}商品"${product.name}"吗？`,
+        showCancelButton: true,
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      }).then(async () => {
+        console.log('用户确认', action);
+        vant.Toast.loading({ message: `${action}中...`, forbidClick: true });
+        
+        try {
+          const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: newStatus })
+          });
+          
+          vant.Toast.clear();
+          
+          if (res.code === 200) {
+            vant.Toast.success(`${action}成功`);
+            await loadProducts();
+          } else {
+            vant.Toast.fail(`${action}失败：` + res.message);
+          }
+        } catch (error) {
+          vant.Toast.clear();
+          vant.Toast.fail(`${action}错误：` + error.message);
+        }
+      }).catch(() => {
+        console.log('用户取消操作');
+      });
+    }
+
+    // 删除商品
+    async function deleteProduct(id) {
+      console.log('删除商品:', id);
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      
+      vant.Dialog({
+        title: '确认删除',
+        message: `⚠️ 确定要删除商品"${product.name}"吗？\n\n删除后将移入回收站，可从回收站恢复或彻底删除。`,
+        showCancelButton: true,
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#ee0a24'
+      }).then(async () => {
+        console.log('用户确认删除');
+        vant.Toast.loading({ message: '删除中...', forbidClick: true });
+        
+        try {
+          const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}`, { method: 'DELETE' });
+          
+          vant.Toast.clear();
+          
+          if (res.code === 200) {
+            vant.Toast.success('商品已移入回收站');
+            await loadProducts();
+          } else {
+            vant.Toast.fail('删除失败：' + res.message);
+          }
+        } catch (error) {
+          vant.Toast.clear();
+          vant.Toast.fail('删除错误：' + error.message);
+        }
+      }).catch(() => {
+        console.log('用户取消删除');
+      });
+    }
+  </script>
+</body>
+</html>

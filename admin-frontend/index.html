@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分销系统管理后台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; }
+    .header { background: linear-gradient(135deg, #1989fa 0%, #0e6fd6 100%); color: white; padding: 20px 30px; }
+    .header h1 { font-size: 24px; margin-bottom: 5px; }
+    .nav-tabs { display: flex; background: white; padding: 0 30px; border-bottom: 1px solid #e8e8e8; }
+    .nav-tab { padding: 16px 24px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: #666; }
+    .nav-tab.active { color: #1989fa; border-bottom-color: #1989fa; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 30px; }
+    .section { background: white; border-radius: 12px; padding: 24px; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .section.active { display: block; }
+    .section-title { font-size: 18px; font-weight: bold; margin-bottom: 16px; color: #333; }
+    
+    /* 按钮样式 */
+    .btn { 
+      padding: 6px 12px; 
+      border: none; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      font-size: 12px; 
+      margin: 2px;
+      transition: all 0.2s;
+      pointer-events: auto !important;
+      position: relative;
+      z-index: 100 !important;
+      display: inline-block;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: #1989fa; color: white; }
+    .btn-success { background: #07c160; color: white; }
+    .btn-warning { background: #ff976a; color: white; }
+    .btn-danger { background: #ee0a24; color: white; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    
+    /* 表格样式 */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+    th { background: #f7f8fa; color: #666; font-weight: 600; }
+    td { font-size: 14px; }
+    tr:hover { background: #f7f8fa; }
+    td button { pointer-events: auto !important; z-index: 100 !important; }
+    
+    /* 徽章样式 */
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-block; }
+    .badge-success { background: #e8f5e9; color: #07c160; }
+    .badge-danger { background: #ffebeb; color: #ee0a24; }
+    
+    /* 操作按钮组 */
+    .action-buttons { display: flex; gap: 4px; align-items: center; }
+    .action-buttons button { pointer-events: auto !important; z-index: 100 !important; }
+    
+    /* 自定义弹窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .modal-title { font-size: 18px; font-weight: bold; margin-bottom: 16px; color: #333; }
+    .modal-content { font-size: 14px; color: #666; margin-bottom: 24px; line-height: 1.6; }
+    .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+    .modal-buttons button { flex: 1; max-width: 120px; }
+    
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 10000;
+      display: none;
+    }
+    .toast.active { display: block; }
+    .toast.success { background: rgba(7, 193, 96, 0.9); }
+    .toast.error { background: rgba(238, 10, 36, 0.9); }
+    .toast.loading { background: rgba(25, 137, 250, 0.9); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 分销系统管理后台</h1>
+    <p>实时数据统计与管理系统</p>
+  </div>
+  
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('dashboard')">📊 数据统计</div>
+    <div class="nav-tab" onclick="switchTab('users')">👥 用户管理</div>
+    <div class="nav-tab" onclick="switchTab('referral')">🌳 分销关系</div>
+    <div class="nav-tab" onclick="switchTab('commissions')">💰 佣金管理</div>
+    <div class="nav-tab" onclick="switchTab('orders')">📦 订单管理</div>
+    <div class="nav-tab" onclick="switchTab('products')">📦 商品管理</div>
+    <div class="nav-tab" onclick="switchTab('settings')">⚙️ 系统配置</div>
+  </div>
+  
+  <div class="container">
+    <!-- 数据统计 -->
+    <div id="dashboard" class="section active">
+      <div class="section-title">📊 数据统计</div>
+      <div id="dashboardContent">
+        <div style="text-align: center; padding: 40px; color: #999;">加载中...</div>
+      </div>
+    </div>
+    
+    <!-- 用户管理 -->
+    <div id="users" class="section">
+      <div class="section-title">👥 用户管理</div>
+      <div id="userList">
+        <div style="text-align: center; padding: 40px; color: #999;">加载中...</div>
+      </div>
+    </div>
+    
+    <!-- 分销关系 -->
+    <div id="referral" class="section">
+      <div class="section-title">🌳 分销关系</div>
+      <div id="referralContent">
+        <div style="text-align: center; padding: 40px; color: #999;">加载中...</div>
+      </div>
+    </div>
+    
+    <!-- 佣金管理 -->
+    <div id="commissions" class="section">
+      <div class="section-title">💰 佣金管理</div>
+      <div id="commissionList">
+        <div style="text-align: center; padding: 40px; color: #999;">加载中...</div>
+      </div>
+    </div>
+    
+    <!-- 订单管理 -->
+    <div id="orders" class="section">
+      <div class="section-title">📦 订单管理</div>
+      <div id="orderList">
+        <div style="text-align: center; padding: 40px; color: #999;">加载中...</div>
+      </div>
+    </div>
+    
+    <!-- 商品管理 -->
+    <div id="products" class="section active">
+      <div class="section-title">📦 商品管理</div>
+      <div style="margin-bottom: 16px; display: flex; gap: 10px; align-items: center;">
+        <button class="btn btn-primary" onclick="showAddProduct()">+ 添加商品</button>
+        <button class="btn btn-warning" onclick="showRecycleBin()">🗑️ 回收站</button>
+      </div>
+      <div id="productList">
+        <div style="text-align: center; padding: 40px; color: #999;">加载中...</div>
+      </div>
+    </div>
+    
+    <!-- 系统配置 -->
+    <div id="settings" class="section">
+      <div class="section-title">⚙️ 系统配置</div>
+      <div id="settingsContent">
+        <div style="text-align: center; padding: 40px; color: #999;">功能开发中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 回收站弹窗 -->
+  <div id="recycleBinModal" class="modal-overlay">
+    <div class="modal" style="max-width: 900px; width: 95%;">
+      <div class="modal-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>🗑️ 回收站</span>
+        <button class="btn" onclick="hideRecycleBin()" style="padding: 4px 12px; font-size: 12px;">✕ 关闭</button>
+      </div>
+      <div style="margin: 16px 0; display: flex; gap: 10px;">
+        <button class="btn btn-secondary" onclick="loadRecycledProducts()">🔄 刷新</button>
+        <button class="btn btn-primary" onclick="batchRestore()">✅ 批量恢复</button>
+        <button class="btn btn-danger" onclick="batchDelete()">🗑️ 批量彻底删除</button>
+      </div>
+      <div id="recycleBinList" style="max-height: 400px; overflow-y: auto;">
+        <div style="text-align: center; padding: 40px; color: #999;">加载中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自定义弹窗 -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">标题</div>
+      <div class="modal-content" id="modalContent">内容</div>
+      <div class="modal-buttons">
+        <button class="btn" id="modalCancelBtn" onclick="hideModal()">取消</button>
+        <button class="btn btn-primary" id="modalConfirmBtn" onclick="confirmAction()">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div id="toast" class="toast">提示信息</div>
+
+  <script>
+    const API_BASE = 'http://localhost:3010/api';
+    let authToken = '';
+    let products = [];
+    let currentAction = null;
+
+    // 页面加载时执行
+    window.addEventListener('DOMContentLoaded', async function() {
+      console.log('✅ 页面加载完成');
+      await login();
+      await loadDashboard(); // 默认加载数据统计
+    });
+
+    // 切换标签
+    function switchTab(tabId) {
+      document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+      
+      // 根据标签加载对应数据
+      switch(tabId) {
+        case 'dashboard':
+          loadDashboard();
+          break;
+        case 'users':
+          loadUsers();
+          break;
+        case 'referral':
+          loadReferralTree();
+          break;
+        case 'commissions':
+          loadCommissions();
+          break;
+        case 'orders':
+          loadOrders();
+          break;
+        case 'products':
+          loadProducts();
+          break;
+      }
+    }
+
+    // 登录
+    async function login() {
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+        const data = await res.json();
+        if (data.code === 200) {
+          authToken = data.data.token;
+          console.log('✅ 登录成功');
+          showToast('登录成功', 'success');
+        } else {
+          showToast('登录失败：' + data.message, 'error');
+        }
+      } catch (error) {
+        showToast('登录错误：' + error.message, 'error');
+      }
+    }
+
+    // API 请求
+    async function fetchWithAuth(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return res.json();
+    }
+
+    // 加载商品列表
+    async function loadProducts() {
+      const container = document.getElementById('productList');
+      container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">加载中...</div>';
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products`);
+        console.log('API 响应:', res);
+        
+        if (res.code === 200) {
+          products = res.data.list;
+          console.log('商品数量:', products.length);
+          renderProducts();
+        } else {
+          showToast('加载失败：' + res.message, 'error');
+          container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败</div>';
+        }
+      } catch (error) {
+        console.error('加载错误:', error);
+        showToast('加载错误：' + error.message, 'error');
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载错误</div>';
+      }
+    }
+
+    // 渲染商品列表
+    function renderProducts() {
+      const container = document.getElementById('productList');
+      
+      if (products.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">暂无商品</div>';
+        return;
+      }
+      
+      const html = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>商品名称</th>
+              <th>价格</th>
+              <th>库存</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${products.map(p => `
+              <tr>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>¥${p.currentPrice}</td>
+                <td>${p.stock}</td>
+                <td><span class="badge ${p.status === 1 ? 'badge-success' : 'badge-danger'}">${p.status === 1 ? '上架' : '下架'}</span></td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn btn-primary btn-sm" onclick="editProduct(${p.id})">编辑</button>
+                    ${p.status === 1 
+                      ? `<button class="btn btn-warning btn-sm" onclick="toggleProductStatus(${p.id}, 0)">下架</button>`
+                      : `<button class="btn btn-success btn-sm" onclick="toggleProductStatus(${p.id}, 1)">上架</button>`
+                    }
+                    <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">删除</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      container.innerHTML = html;
+      console.log('商品列表渲染完成');
+    }
+
+    // 显示弹窗
+    function showModal(title, content, onConfirm) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalContent').innerHTML = content;
+      document.getElementById('modalOverlay').classList.add('active');
+      currentAction = onConfirm;
+    }
+
+    // 隐藏弹窗
+    function hideModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+      currentAction = null;
+    }
+
+    // 确认操作
+    function confirmAction() {
+      if (currentAction) {
+        currentAction();
+      }
+      hideModal();
+    }
+
+    // Toast 提示
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast active ' + type;
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 2000);
+    }
+
+    // 添加商品 - 在新标签页中打开
+    function showAddProduct() {
+      window.open('product-add.html', '_blank');
+    }
+
+    // 编辑商品 - 在新标签页中打开
+    function editProduct(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) {
+        showToast('商品不存在', 'error');
+        return;
+      }
+      // 在新标签页中打开编辑页面
+      const editUrl = `product-edit.html?id=${id}`;
+      window.open(editUrl, '_blank');
+    }
+
+    // 上架/下架商品
+    function toggleProductStatus(id, newStatus) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      
+      const action = newStatus === 1 ? '上架' : '下架';
+      
+      showModal(
+        '确认操作',
+        `确定要${action}商品"${product.name}"吗？`,
+        async () => {
+          showToast(`${action}中...`, 'loading');
+          
+          try {
+            const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}/status`, {
+              method: 'PUT',
+              body: JSON.stringify({ status: newStatus })
+            });
+            
+            if (res.code === 200) {
+              showToast(`${action}成功`, 'success');
+              await loadProducts();
+            } else {
+              showToast(`${action}失败：` + res.message, 'error');
+            }
+          } catch (error) {
+            showToast(`${action}错误：` + error.message, 'error');
+          }
+        }
+      );
+    }
+
+    // 删除商品
+    function deleteProduct(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      
+      showModal(
+        '确认删除',
+        `⚠️ 确定要删除商品"${product.name}"吗？<br><br><span style="color: #999; font-size: 12px;">删除后将移入回收站，可从回收站恢复或彻底删除。</span>`,
+        async () => {
+          showToast('删除中...', 'loading');
+          
+          try {
+            const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}`, { 
+              method: 'DELETE' 
+            });
+            
+            if (res.code === 200) {
+              showToast('商品已移入回收站', 'success');
+              await loadProducts();
+            } else {
+              showToast('删除失败：' + res.message, 'error');
+            }
+          } catch (error) {
+            showToast('删除错误：' + error.message, 'error');
+          }
+        }
+      );
+    }
+
+    // ==================== 数据统计 ====================
+    
+    async function loadDashboard() {
+      const container = document.getElementById('dashboardContent');
+      container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">加载中...</div>';
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/dashboard`);
+        
+        if (res.code === 200) {
+          const data = res.data;
+          const html = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 12px;">
+                <div style="font-size: 14px; opacity: 0.9;">👥 总用户数</div>
+                <div style="font-size: 36px; font-weight: bold; margin-top: 8px;">${data.users.total}</div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.8;">今日新增：${data.users.newToday}</div>
+              </div>
+              <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 24px; border-radius: 12px;">
+                <div style="font-size: 14px; opacity: 0.9;">📦 总订单数</div>
+                <div style="font-size: 36px; font-weight: bold; margin-top: 8px;">${data.orders.total}</div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.8;">今日订单：${data.orders.today}</div>
+              </div>
+              <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 24px; border-radius: 12px;">
+                <div style="font-size: 14px; opacity: 0.9;">💰 总销售额</div>
+                <div style="font-size: 36px; font-weight: bold; margin-top: 8px;">¥${data.sales.total.toFixed(2)}</div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.8;">今日销售：¥${data.sales.today.toFixed(2)}</div>
+              </div>
+              <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 24px; border-radius: 12px;">
+                <div style="font-size: 14px; opacity: 0.9;">🎁 已发佣金</div>
+                <div style="font-size: 36px; font-weight: bold; margin-top: 8px;">¥${data.commissions.paid.toFixed(2)}</div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.8;">待发放：¥${data.commissions.pending.toFixed(2)}</div>
+              </div>
+            </div>
+            <div style="background: white; border-radius: 12px; padding: 24px;">
+              <div style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">📦 商品统计</div>
+              <div style="font-size: 24px;">上架商品：<strong style="color: #07c160;">${data.products.total}</strong> 个</div>
+            </div>
+          `;
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败</div>';
+        }
+      } catch (error) {
+        console.error('加载数据失败:', error);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败</div>';
+      }
+    }
+
+    // ==================== 用户管理 ====================
+    
+    async function loadUsers() {
+      const container = document.getElementById('userList');
+      container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">加载中...</div>';
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/users`);
+        
+        if (res.code === 200) {
+          const users = res.data.list;
+          const html = `
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>用户名</th>
+                  <th>昵称</th>
+                  <th>手机</th>
+                  <th>推荐码</th>
+                  <th>上级</th>
+                  <th>余额</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${users.map(u => `
+                  <tr>
+                    <td>${u.id}</td>
+                    <td>${u.username}</td>
+                    <td>${u.nickname || '-'}</td>
+                    <td>${u.phone || '-'}</td>
+                    <td>${u.referralCode}</td>
+                    <td>${u.referrer ? u.referrer.username : '-'}</td>
+                    <td>¥${u.balance || 0}</td>
+                    <td><span class="badge ${u.status === 1 ? 'badge-success' : 'badge-danger'}">${u.status === 1 ? '正常' : '禁用'}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败</div>';
+        }
+      } catch (error) {
+        console.error('加载用户失败:', error);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败</div>';
+      }
+    }
+
+    // ==================== 分销关系 ====================
+    
+    async function loadReferralTree() {
+      const container = document.getElementById('referralContent');
+      container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">加载中...</div>';
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/referral-tree`);
+        
+        if (res.code === 200) {
+          const tree = res.data.tree;
+          if (!tree || tree.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">暂无分销关系</div>';
+            return;
+          }
+          
+          // 扁平化树形结构
+          const flatList = flattenTree(tree);
+          
+          const html = `
+            <div style="padding: 20px;">
+              <div style="margin-bottom: 16px; font-size: 14px; color: #666;">共 ${flatList.length} 个用户</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>昵称</th>
+                    <th>手机</th>
+                    <th>推荐码</th>
+                    <th>上级</th>
+                    <th>下级数</th>
+                    <th>加入时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${flatList.map(item => `
+                    <tr style="padding-left: ${item.indent * 20}px;">
+                      <td>${item.id}</td>
+                      <td style="padding-left: ${item.indent * 20}px;">${item.indent > 0 ? '└─ ' : ''}${item.username}</td>
+                      <td>${item.nickname || '-'}</td>
+                      <td>${item.phone || '-'}</td>
+                      <td>${item.referralCode || '-'}</td>
+                      <td>${item.parentName || '-'}</td>
+                      <td>${item.childrenCount}</td>
+                      <td>${new Date(item.created_at).toLocaleString('zh-CN')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败：' + res.message + '</div>';
+        }
+      } catch (error) {
+        console.error('加载分销关系失败:', error);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败：' + error.message + '</div>';
+      }
+    }
+    
+    // 扁平化树形结构
+    function flattenTree(tree, indent = 0, parentName = null) {
+      let result = [];
+      
+      for (const node of tree) {
+        result.push({
+          id: node.id,
+          username: node.username,
+          nickname: node.nickname,
+          phone: node.phone,
+          referralCode: node.referralCode,
+          referrerId: node.referrerId,
+          parentName: parentName,
+          indent: indent,
+          childrenCount: node.children ? node.children.length : 0,
+          created_at: node.created_at
+        });
+        
+        if (node.children && node.children.length > 0) {
+          result = result.concat(flattenTree(node.children, indent + 1, node.nickname || node.username));
+        }
+      }
+      
+      return result;
+    }
+
+    // ==================== 佣金管理 ====================
+    
+    async function loadCommissions() {
+      const container = document.getElementById('commissionList');
+      container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">加载中...</div>';
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/commissions`);
+        
+        if (res.code === 200) {
+          const commissions = res.data.list;
+          if (commissions.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">暂无佣金记录</div>';
+            return;
+          }
+          
+          const html = `
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>用户</th>
+                  <th>订单号</th>
+                  <th>商品</th>
+                  <th>金额</th>
+                  <th>状态</th>
+                  <th>时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${commissions.map(c => `
+                  <tr>
+                    <td>${c.id}</td>
+                    <td>${c.user ? c.user.nickname || c.user.username : '-'}</td>
+                    <td>${c.order ? c.order.orderNo : '-'}</td>
+                    <td>${c.product ? c.product.name : '-'}</td>
+                    <td>¥${c.amount}</td>
+                    <td>
+                      <span class="badge ${c.status === 'paid' ? 'badge-success' : c.status === 'confirmed' ? 'badge-warning' : 'badge-danger'}">
+                        ${c.status === 'paid' ? '已发放' : c.status === 'confirmed' ? '待发放' : '待确认'}
+                      </span>
+                    </td>
+                    <td>${new Date(c.created_at).toLocaleString('zh-CN')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败</div>';
+        }
+      } catch (error) {
+        console.error('加载佣金失败:', error);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败</div>';
+      }
+    }
+
+    // ==================== 订单管理 ====================
+    
+    async function loadOrders() {
+      const container = document.getElementById('orderList');
+      container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">加载中...</div>';
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/orders`);
+        
+        if (res.code === 200) {
+          const orders = res.data.list;
+          if (orders.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">暂无订单</div>';
+            return;
+          }
+          
+          const html = `
+            <table>
+              <thead>
+                <tr>
+                  <th>订单号</th>
+                  <th>用户</th>
+                  <th>商品</th>
+                  <th>金额</th>
+                  <th>状态</th>
+                  <th>时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orders.map(o => `
+                  <tr>
+                    <td>${o.orderNo}</td>
+                    <td>${o.user ? o.user.nickname || o.user.username : '-'}</td>
+                    <td>${o.items && o.items.length > 0 ? o.items[0].product?.name : '-'}</td>
+                    <td>¥${o.actualAmount}</td>
+                    <td>
+                      <span class="badge ${o.status === 'completed' ? 'badge-success' : o.status === 'paid' ? 'badge-success' : o.status === 'cancelled' ? 'badge-danger' : 'badge-warning'}">
+                        ${o.status === 'completed' ? '已完成' : o.status === 'paid' ? '已支付' : o.status === 'cancelled' ? '已取消' : o.status === 'shipped' ? '已发货' : '待支付'}
+                      </span>
+                    </td>
+                    <td>${new Date(o.created_at).toLocaleString('zh-CN')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败</div>';
+        }
+      } catch (error) {
+        console.error('加载订单失败:', error);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败</div>';
+      }
+    }
+
+    // ==================== 回收站功能 ====================
+    
+    let recycledProducts = [];
+
+    // 显示回收站
+    function showRecycleBin() {
+      document.getElementById('recycleBinModal').classList.add('active');
+      loadRecycledProducts();
+    }
+
+    // 隐藏回收站
+    function hideRecycleBin() {
+      document.getElementById('recycleBinModal').classList.remove('active');
+    }
+
+    // 加载回收站商品列表
+    async function loadRecycledProducts() {
+      const container = document.getElementById('recycleBinList');
+      container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">加载中...</div>';
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/recycled`);
+        
+        if (res.code === 200) {
+          recycledProducts = res.data.list || [];
+          renderRecycledProducts();
+        } else {
+          showToast('加载失败：' + res.message, 'error');
+          container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载失败</div>';
+        }
+      } catch (error) {
+        console.error('加载错误:', error);
+        showToast('加载错误：' + error.message, 'error');
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44;">加载错误</div>';
+      }
+    }
+
+    // 渲染回收站商品列表
+    function renderRecycledProducts() {
+      const container = document.getElementById('recycleBinList');
+      
+      if (recycledProducts.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">回收站为空</div>';
+        return;
+      }
+      
+      const html = `
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAllRecycled" onchange="toggleSelectAllRecycled()"></th>
+              <th>ID</th>
+              <th>商品名称</th>
+              <th>价格</th>
+              <th>库存</th>
+              <th>删除时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${recycledProducts.map(p => `
+              <tr>
+                <td><input type="checkbox" class="recycled-checkbox" value="${p.id}"></td>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>¥${p.currentPrice}</td>
+                <td>${p.stock}</td>
+                <td>${formatDate(p.deletedAt)}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn btn-success btn-sm" onclick="restoreProduct(${p.id})">恢复</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteProductForever(${p.id})">彻底删除</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      container.innerHTML = html;
+    }
+
+    // 格式化日期
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleString('zh-CN', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    }
+
+    // 全选/取消全选
+    function toggleSelectAllRecycled() {
+      const selectAll = document.getElementById('selectAllRecycled');
+      const checkboxes = document.querySelectorAll('.recycled-checkbox');
+      checkboxes.forEach(cb => {
+        cb.checked = selectAll.checked;
+      });
+    }
+
+    // 获取选中的商品 ID
+    function getSelectedRecycledIds() {
+      const checkboxes = document.querySelectorAll('.recycled-checkbox:checked');
+      return Array.from(checkboxes).map(cb => parseInt(cb.value));
+    }
+
+    // 批量恢复
+    async function batchRestore() {
+      const ids = getSelectedRecycledIds();
+      if (ids.length === 0) {
+        showToast('请选择要恢复的商品', 'error');
+        return;
+      }
+      
+      showModal(
+        '确认恢复',
+        `确定要恢复选中的 ${ids.length} 个商品吗？`,
+        async () => {
+          showToast('恢复中...', 'loading');
+          
+          try {
+            const res = await fetchWithAuth(`${API_BASE}/admin/products/batch-restore`, {
+              method: 'POST',
+              body: JSON.stringify({ ids })
+            });
+            
+            if (res.code === 200) {
+              showToast('恢复成功', 'success');
+              await loadRecycledProducts();
+            } else {
+              showToast('恢复失败：' + res.message, 'error');
+            }
+          } catch (error) {
+            showToast('恢复错误：' + error.message, 'error');
+          }
+        }
+      );
+    }
+
+    // 批量彻底删除
+    async function batchDelete() {
+      const ids = getSelectedRecycledIds();
+      if (ids.length === 0) {
+        showToast('请选择要彻底删除的商品', 'error');
+        return;
+      }
+      
+      showModal(
+        '确认彻底删除',
+        `⚠️ 确定要彻底删除选中的 ${ids.length} 个商品吗？<br><br><span style="color: #f44; font-weight: bold;">此操作不可恢复！</span>`,
+        async () => {
+          showToast('删除中...', 'loading');
+          
+          try {
+            const res = await fetchWithAuth(`${API_BASE}/admin/products/batch-delete-forever`, {
+              method: 'POST',
+              body: JSON.stringify({ ids })
+            });
+            
+            if (res.code === 200) {
+              showToast('彻底删除成功', 'success');
+              await loadRecycledProducts();
+            } else {
+              showToast('删除失败：' + res.message, 'error');
+            }
+          } catch (error) {
+            showToast('删除错误：' + error.message, 'error');
+          }
+        }
+      );
+    }
+
+    // 恢复单个商品
+    async function restoreProduct(id) {
+      const product = recycledProducts.find(p => p.id === id);
+      if (!product) return;
+      
+      showModal(
+        '确认恢复',
+        `确定要恢复商品"${product.name}"吗？`,
+        async () => {
+          showToast('恢复中...', 'loading');
+          
+          try {
+            const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}/restore`, {
+              method: 'POST'
+            });
+            
+            if (res.code === 200) {
+              showToast('恢复成功', 'success');
+              await loadRecycledProducts();
+            } else {
+              showToast('恢复失败：' + res.message, 'error');
+            }
+          } catch (error) {
+            showToast('恢复错误：' + error.message, 'error');
+          }
+        }
+      );
+    }
+
+    // 彻底删除单个商品
+    async function deleteProductForever(id) {
+      const product = recycledProducts.find(p => p.id === id);
+      if (!product) return;
+      
+      showModal(
+        '确认彻底删除',
+        `⚠️ 确定要彻底删除商品"${product.name}"吗？<br><br><span style="color: #f44; font-weight: bold;">此操作不可恢复！</span>`,
+        async () => {
+          showToast('删除中...', 'loading');
+          
+          try {
+            const res = await fetchWithAuth(`${API_BASE}/admin/products/${id}/delete-forever`, {
+              method: 'DELETE'
+            });
+            
+            if (res.code === 200) {
+              showToast('彻底删除成功', 'success');
+              await loadRecycledProducts();
+            } else {
+              showToast('删除失败：' + res.message, 'error');
+            }
+          } catch (error) {
+            showToast('删除错误：' + error.message, 'error');
+          }
+        }
+      );
+    }
+  </script>
+</body>
+</html>

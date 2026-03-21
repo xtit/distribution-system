@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>编辑商品 - 分销系统管理后台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; }
+    .header { background: linear-gradient(135deg, #1989fa 0%, #0e6fd6 100%); color: white; padding: 20px 30px; }
+    .header h1 { font-size: 24px; margin-bottom: 5px; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 30px; }
+    .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .section-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; color: #333; border-bottom: 2px solid #1989fa; padding-bottom: 10px; }
+    
+    .btn { 
+      padding: 10px 20px; 
+      border: none; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      font-size: 14px; 
+      transition: all 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #1989fa; color: white; }
+    .btn-success { background: #07c160; color: white; }
+    .btn-warning { background: #ff976a; color: white; }
+    .btn-danger { background: #ee0a24; color: white; }
+    .btn-secondary { background: #969799; color: white; }
+    
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 14px; }
+    .form-label .required { color: #ee0a24; margin-left: 4px; }
+    .form-input { width: 100%; padding: 10px 12px; border: 1px solid #dcdee0; border-radius: 4px; font-size: 14px; transition: all 0.2s; }
+    .form-input:focus { outline: none; border-color: #1989fa; box-shadow: 0 0 0 2px rgba(25, 137, 250, 0.2); }
+    .form-textarea { min-height: 100px; resize: vertical; }
+    .form-row { display: flex; gap: 20px; }
+    .form-col { flex: 1; }
+    
+    .image-upload-area { border: 2px dashed #dcdee0; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .image-upload-area:hover { border-color: #1989fa; background: #f7f8fa; }
+    .image-upload-area.has-image { border-style: solid; }
+    .image-preview { max-width: 200px; max-height: 200px; margin: 10px auto; }
+    .image-preview img { max-width: 100%; border-radius: 8px; }
+    
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 10000;
+      display: none;
+    }
+    .toast.active { display: block; }
+    .toast.success { background: rgba(7, 193, 96, 0.9); }
+    .toast.error { background: rgba(238, 10, 36, 0.9); }
+    .toast.loading { background: rgba(25, 137, 250, 0.9); }
+    
+    .button-group { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+    
+    .radio-group { display: flex; gap: 20px; }
+    .radio-label { display: flex; align-items: center; cursor: pointer; }
+    .radio-label input { margin-right: 8px; }
+    
+    .help-text { font-size: 12px; color: #999; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>✏️ 编辑商品</h1>
+    <p>修改商品信息</p>
+  </div>
+  
+  <div class="container">
+    <form id="productForm">
+      <!-- 基本信息 -->
+      <div class="section">
+        <div class="section-title">📝 基本信息</div>
+        
+        <div class="form-group">
+          <label class="form-label">商品名称 <span class="required">*</span></label>
+          <input type="text" id="name" class="form-input" required placeholder="请输入商品名称">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">商品描述</label>
+          <textarea id="description" class="form-input form-textarea" placeholder="请输入商品描述"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">商品主图</label>
+          <div class="image-upload-area" onclick="document.getElementById('mainImageInput').click()">
+            <div id="imageUploadText">📁 点击上传图片</div>
+            <div id="imagePreview" class="image-preview" style="display: none;">
+              <img id="imagePreviewImg" src="" alt="主图预览">
+            </div>
+            <input type="hidden" id="mainImage">
+            <input type="file" id="mainImageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+          </div>
+          <div class="help-text">建议尺寸：800x800 像素，支持 JPG、PNG 格式</div>
+        </div>
+      </div>
+      
+      <!-- 价格与库存 -->
+      <div class="section">
+        <div class="section-title">💰 价格与库存</div>
+        
+        <div class="form-row">
+          <div class="form-col">
+            <div class="form-group">
+              <label class="form-label">原价 <span class="required">*</span></label>
+              <input type="number" id="originalPrice" class="form-input" step="0.01" min="0" required placeholder="0.00">
+            </div>
+          </div>
+          <div class="form-col">
+            <div class="form-group">
+              <label class="form-label">现价 <span class="required">*</span></label>
+              <input type="number" id="currentPrice" class="form-input" step="0.01" min="0" required placeholder="0.00">
+            </div>
+          </div>
+          <div class="form-col">
+            <div class="form-group">
+              <label class="form-label">成本价</label>
+              <input type="number" id="costPrice" class="form-input" step="0.01" min="0" placeholder="0.00">
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">库存数量 <span class="required">*</span></label>
+          <input type="number" id="stock" class="form-input" min="0" required placeholder="0">
+        </div>
+      </div>
+      
+      <!-- 佣金设置 -->
+      <div class="section">
+        <div class="section-title">🎁 佣金设置</div>
+        
+        <div class="form-group">
+          <label class="form-label">佣金类型</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="commissionType" value="percentage" checked>
+              按比例 (%)
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="commissionType" value="fixed">
+              固定金额 (¥)
+            </label>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">佣金值 <span class="required">*</span></label>
+          <input type="number" id="commissionValue" class="form-input" step="0.01" min="0" required placeholder="0">
+          <div class="help-text" id="commissionHelp">按现价的百分比计算佣金</div>
+        </div>
+      </div>
+      
+      <!-- 商品状态 -->
+      <div class="section">
+        <div class="section-title">📊 商品状态</div>
+        
+        <div class="form-group">
+          <label class="form-label">上架状态</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="status" value="1">
+              上架销售
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="status" value="0">
+              已下架
+            </label>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">热门推荐</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="isHot" value="1">
+              是
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="isHot" value="0">
+              否
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 操作按钮 -->
+      <div class="button-group">
+        <button type="button" class="btn btn-secondary" onclick="window.close()">取消</button>
+        <button type="submit" class="btn btn-primary">💾 保存修改</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div id="toast" class="toast">提示信息</div>
+
+  <script>
+    const API_BASE = 'http://localhost:3010/api';
+    let authToken = '';
+    let productId = null;
+
+    // 页面加载时执行
+    window.addEventListener('DOMContentLoaded', async function() {
+      // 从 URL 获取商品 ID
+      const urlParams = new URLSearchParams(window.location.search);
+      productId = urlParams.get('id');
+      
+      if (!productId) {
+        showToast('商品 ID 不存在', 'error');
+        setTimeout(() => window.close(), 2000);
+        return;
+      }
+      
+      await login();
+      await loadProduct();
+      
+      // 监听佣金类型变化
+      document.querySelectorAll('input[name="commissionType"]').forEach(radio => {
+        radio.addEventListener('change', updateCommissionHelp);
+      });
+    });
+
+    // 登录
+    async function login() {
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+        const data = await res.json();
+        if (data.code === 200) {
+          authToken = data.data.token;
+          console.log('✅ 登录成功');
+        } else {
+          showToast('登录失败：' + data.message, 'error');
+        }
+      } catch (error) {
+        showToast('登录错误：' + error.message, 'error');
+      }
+    }
+
+    // API 请求
+    async function fetchWithAuth(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return res.json();
+    }
+
+    // 加载商品数据
+    async function loadProduct() {
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/${productId}`);
+        
+        if (res.code === 200) {
+          const product = res.data.product;
+          fillForm(product);
+        } else {
+          showToast('加载失败：' + res.message, 'error');
+        }
+      } catch (error) {
+        showToast('加载错误：' + error.message, 'error');
+      }
+    }
+
+    // 填充表单
+    function fillForm(product) {
+      document.getElementById('name').value = product.name || '';
+      document.getElementById('description').value = product.description || '';
+      document.getElementById('mainImage').value = product.mainImage || '';
+      document.getElementById('originalPrice').value = product.originalPrice || 0;
+      document.getElementById('currentPrice').value = product.currentPrice || 0;
+      document.getElementById('costPrice').value = product.costPrice || 0;
+      document.getElementById('stock').value = product.stock || 0;
+      document.getElementById('commissionValue').value = product.commissionValue || 0;
+      
+      // 设置佣金类型
+      document.querySelector(`input[name="commissionType"][value="${product.commissionType || 'percentage'}"]`).checked = true;
+      
+      // 设置状态
+      document.querySelector(`input[name="status"][value="${product.status || 1}"]`).checked = true;
+      document.querySelector(`input[name="isHot"][value="${product.isHot || 0}"]`).checked = true;
+      
+      // 显示主图预览
+      if (product.mainImage) {
+        showImagePreview(product.mainImage);
+      }
+      
+      updateCommissionHelp();
+    }
+
+    // 更新佣金提示文字
+    function updateCommissionHelp() {
+      const type = document.querySelector('input[name="commissionType"]:checked').value;
+      const helpText = document.getElementById('commissionHelp');
+      if (type === 'percentage') {
+        helpText.textContent = '按现价的百分比计算佣金';
+      } else {
+        helpText.textContent = '每笔订单的固定佣金金额';
+      }
+    }
+
+    // 处理图片上传
+    async function handleImageUpload(event) {
+      try {
+        const file = event.target.files[0];
+        console.log('选择的文件:', file);
+        
+        if (!file) {
+          console.warn('没有选择文件');
+          return;
+        }
+        
+        // 验证文件类型
+        if (!file.type.startsWith('image/')) {
+          showToast('请选择图片文件 (JPG/PNG)', 'error');
+          return;
+        }
+        
+        // 验证文件大小（最大 5MB）
+        if (file.size > 5 * 1024 * 1024) {
+          showToast('图片大小不能超过 5MB', 'error');
+          return;
+        }
+        
+        console.log('开始上传，文件名:', file.name, '大小:', (file.size / 1024).toFixed(2), 'KB');
+        showToast('上传中...', 'loading');
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        // 打印调试信息
+        console.log('API_BASE:', API_BASE);
+        console.log('Auth Token:', authToken ? '存在' : '不存在');
+        
+        const res = await fetch(`${API_BASE}/admin/upload`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+            // 注意：不要设置 Content-Type，让浏览器自动设置（包含 boundary）
+          },
+          body: formData
+        });
+        
+        console.log('响应状态:', res.status);
+        
+        const data = await res.json();
+        console.log('响应数据:', data);
+        
+        if (data.code === 200) {
+          const imageUrl = data.data.url;
+          console.log('上传成功，URL:', imageUrl);
+          document.getElementById('mainImage').value = imageUrl;
+          showImagePreview(imageUrl);
+          showToast('上传成功', 'success');
+        } else {
+          console.error('上传失败:', data.message);
+          showToast('上传失败：' + data.message, 'error');
+        }
+      } catch (error) {
+        console.error('上传错误:', error);
+        showToast('上传错误：' + error.message, 'error');
+      } finally {
+        // 清空 input，允许重复选择同一文件
+        event.target.value = '';
+      }
+    }
+
+    // 显示图片预览
+    function showImagePreview(url) {
+      console.log('显示图片预览，URL:', url);
+      
+      // 确保 URL 是完整的
+      let imageUrl = url;
+      if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:')) {
+        // 如果是相对路径，拼接 API_BASE 的域名部分
+        imageUrl = API_BASE.replace('/api', '') + url;
+        console.log('转换为完整 URL:', imageUrl);
+      }
+      
+      const imgElement = document.getElementById('imagePreviewImg');
+      const previewElement = document.getElementById('imagePreview');
+      const uploadTextElement = document.getElementById('imageUploadText');
+      
+      // 设置图片加载错误处理
+      imgElement.onerror = function() {
+        console.error('图片加载失败:', imageUrl);
+        showToast('图片加载失败，请检查图片链接', 'error');
+      };
+      
+      // 设置图片加载成功处理
+      imgElement.onload = function() {
+        console.log('图片加载成功:', imageUrl);
+      };
+      
+      // 设置图片源
+      imgElement.src = imageUrl;
+      
+      // 显示预览区域
+      if (previewElement) previewElement.style.display = 'block';
+      if (uploadTextElement) uploadTextElement.style.display = 'none';
+      
+      const uploadArea = document.querySelector('.image-upload-area');
+      if (uploadArea) uploadArea.classList.add('has-image');
+    }
+
+    // 表单提交
+    document.getElementById('productForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = {
+        name: document.getElementById('name').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        mainImage: document.getElementById('mainImage').value,
+        originalPrice: parseFloat(document.getElementById('originalPrice').value) || 0,
+        currentPrice: parseFloat(document.getElementById('currentPrice').value) || 0,
+        costPrice: parseFloat(document.getElementById('costPrice').value) || 0,
+        stock: parseInt(document.getElementById('stock').value) || 0,
+        commissionType: document.querySelector('input[name="commissionType"]:checked').value,
+        commissionValue: parseFloat(document.getElementById('commissionValue').value) || 0,
+        status: parseInt(document.querySelector('input[name="status"]:checked').value),
+        isHot: parseInt(document.querySelector('input[name="isHot"]:checked').value)
+      };
+      
+      // 验证
+      if (!formData.name) {
+        showToast('请输入商品名称', 'error');
+        return;
+      }
+      
+      if (formData.currentPrice > formData.originalPrice) {
+        showToast('现价不能高于原价', 'error');
+        return;
+      }
+      
+      showToast('保存中...', 'loading');
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/products/${productId}`, {
+          method: 'PUT',
+          body: JSON.stringify(formData)
+        });
+        
+        if (res.code === 200) {
+          showToast('保存成功', 'success');
+          setTimeout(() => {
+            // 通知父页面刷新
+            if (window.opener && !window.opener.closed) {
+              window.opener.postMessage({ type: 'productUpdated', productId }, '*');
+            }
+            window.close();
+          }, 1000);
+        } else {
+          showToast('保存失败：' + res.message, 'error');
+        }
+      } catch (error) {
+        showToast('保存错误：' + error.message, 'error');
+      }
+    });
+
+    // Toast 提示
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast active ' + type;
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
