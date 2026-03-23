@@ -2,19 +2,19 @@
   "version": 2,
   "builds": [
     {
-      "src": "package.json",
+      "src": "src/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/src/index.js"
+      "src": "/(.*)",
+      "dest": "src/index.js"
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "DATABASE_PATH": "/tmp/database.db"
+    "NODE_ENV": "production"
   },
-  "regions": ["hnd1"]
+  "regions": ["hnd1"],
+  "outputDirectory": "dist"
 }

@@ -2,8 +2,11 @@ import axios from 'axios'
 import { useUserStore } from '@/stores/user'
 import { showToast } from 'vant'
 
+// 生产环境 API 地址（Vercel 部署）
+const API_URL = import.meta.env.VITE_API_URL || 'https://distribution-system-api.vercel.app'
+
 const request = axios.create({
-  baseURL: '/api',
+  baseURL: API_URL,
   timeout: 10000
 })
 
