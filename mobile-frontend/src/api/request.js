@@ -6,7 +6,7 @@ import { showToast } from 'vant'
 const API_URL = import.meta.env.VITE_API_URL || 'https://distribution-system-production.up.railway.app'
 
 const request = axios.create({
-  baseURL: API_URL,
+  baseURL: API_URL + '/api',
   timeout: 10000
 })
 
