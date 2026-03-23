@@ -7,6 +7,7 @@ const { testConnection, syncDatabase } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const adminRoutes = require('./routes/admin');
+const initDataRoutes = require('./routes/init-data');
 
 const app = express();
 const PORT = process.env.PORT || 3010;
@@ -24,6 +25,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/init', initDataRoutes);
 
 // 健康检查
 app.get('/health', (req, res) => {
