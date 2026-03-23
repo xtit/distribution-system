@@ -69,17 +69,12 @@ const Product = sequelize.define('Product', {
     defaultValue: 0,
     field: 'is_hot'
   },
-  deletedAt: {
-    type: DataTypes.DATE,
-    field: 'deleted_at'
-  }
 }, {
   tableName: 'products',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at',
-  deletedAt: 'deleted_at',
-  paranoid: false // 禁用软删除
+  updatedAt: 'updated_at'
+  // 已禁用软删除
 });
 
 // 实例方法：计算佣金
