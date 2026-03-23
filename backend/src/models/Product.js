@@ -79,7 +79,7 @@ const Product = sequelize.define('Product', {
   createdAt: 'created_at',
   updatedAt: 'updated_at',
   deletedAt: 'deleted_at',
-  paranoid: true // 启用软删除
+  paranoid: false // 禁用软删除
 });
 
 // 实例方法：计算佣金
