@@ -4,13 +4,16 @@ require('dotenv').config();
 
 // 检测环境
 const isVercel = process.env.VERCEL === '1';
+const isRailway = process.env.RAILWAY === 'true' || process.env.RAILWAY_ENVIRONMENT === 'production';
 const hasDatabaseURL = process.env.DATABASE_URL;
 
 let sequelize;
 
-if (hasDatabaseURL) {
+// Railway 或有 DATABASE_URL 时使用 PostgreSQL
+if (hasDatabaseURL || isRailway) {
   // 使用 PostgreSQL（Supabase）
   console.log('📊 使用 PostgreSQL 数据库 (Supabase)');
+  console.log('DATABASE_URL:', hasDatabaseURL ? '已设置' : '未设置，使用默认值');
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     dialectOptions: {
