@@ -215,10 +215,10 @@
   <div id="toast" class="toast">提示信息</div>
 
   <script>
-    // 生产环境 API 地址（Vercel 部署）
+    // 生产环境 API 地址（Railway 部署）
     const API_BASE = window.location.hostname === 'localhost' 
       ? 'http://localhost:3010/api' 
-      : 'https://distribution-system-api.vercel.app/api';
+      : 'https://distribution-system-production.up.railway.app/api';
     let authToken = '';
     let products = [];
     let currentAction = null;
