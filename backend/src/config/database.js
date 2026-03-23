@@ -13,8 +13,14 @@ let sequelize;
 if (hasDatabaseURL || isRailway) {
   // 使用 PostgreSQL（Supabase）
   console.log('📊 使用 PostgreSQL 数据库 (Supabase)');
-  console.log('DATABASE_URL:', hasDatabaseURL ? '已设置' : '未设置，使用默认值');
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
+  
+  // Railway 环境变量（按优先级）
+  const dbUrl = process.env.DATABASE_URL || 
+                'postgresql://postgres.kdpgnhpfkyugrlnpmtju:JgdDwJ9iK2Df8hdu@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres';
+  
+  console.log('DATABASE_URL:', process.env.DATABASE_URL ? '✓ 已设置' : '⚠️ 使用默认值');
+  
+  sequelize = new Sequelize(dbUrl, {
     dialect: 'postgres',
     dialectOptions: {
       ssl: {
