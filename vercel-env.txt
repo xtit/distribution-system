@@ -1,0 +1,16 @@
+# Vercel 环境变量配置
+
+# 数据库连接（Supabase Transaction Pooler）
+DATABASE_URL=postgresql://postgres.kdpgnhpfkyugrlnpmtju:JgdDwJ9iK2Df8hdu@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres
+
+# JWT 密钥
+JWT_SECRET=51fd80b0b242824b750c231983b512ff1dc38f046c1da06206f4a54b70d35233
+
+# 环境
+NODE_ENV=production
+
+# 使用方法：
+# cd backend
+# vercel env add DATABASE_URL production
+# vercel env add JWT_SECRET production
+# vercel env add NODE_ENV production
