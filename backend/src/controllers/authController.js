@@ -221,6 +221,15 @@ exports.getCurrentUser = async (req, res) => {
       attributes: { exclude: ['passwordHash'] }
     });
 
+    // 如果用户没有二维码，自动生成
+    if (!user.qrCodeUrl) {
+      console.log(`用户 ${user.id} 没有二维码，正在生成...`);
+      const qrCodePath = await generateQRCode(user);
+      user.qrCodeUrl = qrCodePath;
+      await user.save();
+      console.log(`用户 ${user.id} 二维码生成成功：${qrCodePath}`);
+    }
+
     res.json({
       code: 200,
       data: { user }
