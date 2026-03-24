@@ -268,7 +268,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// 上传头像
+// 上传头像（返回 base64，避免文件存储问题）
 exports.uploadAvatar = async (req, res) => {
   try {
     if (!req.file) {
@@ -278,15 +278,19 @@ exports.uploadAvatar = async (req, res) => {
       });
     }
 
-    // 构建访问 URL
-    const avatarUrl = `/uploads/${req.file.filename}`;
+    // 将文件转换为 base64
+    const imageBuffer = req.file.buffer;
+    const base64String = imageBuffer.toString('base64');
+    const avatarUrl = `data:${req.file.mimetype};base64,${base64String}`;
+
+    console.log(`头像上传成功，大小：${req.file.size} 字节`);
 
     res.json({
       code: 200,
       message: '上传成功',
       data: {
         url: avatarUrl,
-        filename: req.file.filename,
+        filename: req.file.originalname,
         size: req.file.size
       }
     });
