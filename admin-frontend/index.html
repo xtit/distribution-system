@@ -1011,6 +1011,90 @@
         }
       );
     }
+    
+    // 登录检查和拦截
+    window.addEventListener('load', () => {
+      // 检查登录状态
+      const token = localStorage.getItem('admin_token');
+      const userStr = localStorage.getItem('admin_user');
+      
+      if (!token || !userStr) {
+        // 未登录，跳转到登录页面
+        console.log('未检测到登录信息，跳转到登录页面');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      try {
+        const user = JSON.parse(userStr);
+        if (!user || !user.isAdmin) {
+          // 不是管理员，清除登录信息并跳转
+          console.log('用户不是管理员，跳转到登录页面');
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        // 已登录，设置全局变量
+        window.currentUser = user;
+        console.log('管理员已登录:', user.username);
+        
+        // 更新界面显示用户信息
+        updateUserInterface();
+      } catch (e) {
+        console.error('解析用户信息失败:', e);
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        window.location.href = 'login.html';
+        return;
+      }
+    });
+    
+    // 更新用户界面（显示用户名等）
+    function updateUserInterface() {
+      const user = window.currentUser;
+      if (!user) return;
+      
+      // 在 header 显示用户信息
+      const headerEl = document.querySelector('.header h1');
+      if (headerEl && !headerEl.textContent.includes(user.nickname)) {
+        headerEl.textContent = `分销系统管理后台 - ${user.nickname}`;
+      }
+      
+      // 添加退出按钮
+      const header = document.querySelector('.header');
+      if (header && !document.getElementById('logoutBtn')) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.id = 'logoutBtn';
+        logoutBtn.textContent = '退出登录';
+        logoutBtn.style.cssText = `
+          position: absolute;
+          right: 30px;
+          top: 50%;
+          transform: translateY(-50%);
+          padding: 8px 16px;
+          background: rgba(255,255,255,0.2);
+          color: white;
+          border: 1px solid rgba(255,255,255,0.5);
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: all 0.3s;
+        `;
+        logoutBtn.onmouseover = () => logoutBtn.style.background = 'rgba(255,255,255,0.3)';
+        logoutBtn.onmouseout = () => logoutBtn.style.background = 'rgba(255,255,255,0.2)';
+        logoutBtn.onclick = () => {
+          if (confirm('确定要退出登录吗？')) {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            window.location.href = 'login.html';
+          }
+        };
+        header.style.position = 'relative';
+        header.appendChild(logoutBtn);
+      }
+    }
   </script>
 </body>
 </html>
