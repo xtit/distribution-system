@@ -51,7 +51,17 @@ const authMiddleware = async (req, res, next) => {
 
 // 管理员中间件
 const adminMiddleware = async (req, res, next) => {
-  if (!req.user || req.user.isAdmin !== 1) {
+  if (!req.user) {
+    return res.status(403).json({
+      code: 403,
+      message: '需要管理员权限'
+    });
+  }
+  
+  // 兼容布尔值和整数（PostgreSQL 返回布尔，SQLite 返回整数）
+  const isAdmin = req.user.isAdmin === true || req.user.isAdmin === 1;
+  
+  if (!isAdmin) {
     return res.status(403).json({
       code: 403,
       message: '需要管理员权限'
