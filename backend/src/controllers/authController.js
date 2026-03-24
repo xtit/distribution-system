@@ -141,9 +141,12 @@ async function createIndirectReferrals(referrerId, newUserId, transaction, level
 
 // 生成用户二维码（返回 base64 编码）
 async function generateQRCodeBase64(user) {
-  // 二维码内容：注册链接 + 推荐码
-  const baseUrl = process.env.BASE_URL || 'https://distribution-system-production.up.railway.app';
-  const registerUrl = `${baseUrl}/register?ref=${user.referralCode}`;
+  // 二维码内容：移动端前端地址 + 推荐码
+  // 使用 Vercel 部署的移动端地址
+  const frontendUrl = process.env.FRONTEND_URL || 'https://distribution-system-psi.vercel.app';
+  const registerUrl = `${frontendUrl}/register?ref=${user.referralCode}`;
+  
+  console.log(`为用户 ${user.username} 生成二维码，注册链接：${registerUrl}`);
   
   // 生成 base64 编码的 PNG
   const qrCodeDataUrl = await QRCode.toDataURL(registerUrl, {
