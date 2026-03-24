@@ -118,6 +118,9 @@ const userStore = useUserStore()
 const user = ref(null)
 const qrCodeUrl = ref('')
 
+// 后端 API 基础 URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://distribution-system-production.up.railway.app'
+
 onMounted(async () => {
   await loadUserData()
 })
@@ -126,7 +129,17 @@ const loadUserData = async () => {
   try {
     await userStore.fetchCurrentUser()
     user.value = userStore.user
-    qrCodeUrl.value = user.value?.qrCodeUrl || 'https://via.placeholder.com/200'
+    
+    // 处理二维码 URL：如果是相对路径，拼接完整 URL
+    if (user.value?.qrCodeUrl) {
+      if (user.value.qrCodeUrl.startsWith('/')) {
+        qrCodeUrl.value = API_BASE_URL + user.value.qrCodeUrl
+      } else {
+        qrCodeUrl.value = user.value.qrCodeUrl
+      }
+    } else {
+      qrCodeUrl.value = 'https://via.placeholder.com/200'
+    }
   } catch (error) {
     console.error('加载用户信息失败:', error)
     showToast('加载失败')
