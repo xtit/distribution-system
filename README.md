@@ -15,21 +15,8 @@
 ### 移动端前端
 **地址**: https://distribution-system-psi.vercel.app
 
-**测试账号**:
-- 用户名：`testuser`
-- 密码：`123456`
-
-### 管理后台
-**地址**: https://distribution-system-admin.vercel.app
-
-**管理员账号**:
-- 用户名：`admin`
-- 密码：`admin123`
-
-### 后端 API
-**地址**: https://distribution-system-production.up.railway.app
-
-**健康检查**: https://distribution-system-production.up.railway.app/health
+### 管理平台
+**暂不提供**
 
 ---
 
