@@ -410,12 +410,9 @@
             isAdmin: data.data.user.isAdmin
           }));
           
-          showToast('登录成功，跳转中...');
-          
-          // 跳转到管理后台
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 1000);
+          // 登录成功，直接跳转，不显示 toast（避免闪现）
+          // 使用 replace 替换当前页面，不保留历史记录
+          window.location.replace('index.html');
         } else {
           showToast(data.message || '登录失败');
           loginBtn.disabled = false;
