@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { Product, User } = require('../models');
-const { authenticate, requireAdmin } = require('../middleware/auth');
+const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 
 // 初始化测试数据（仅管理员可用）
-router.post('/init-test-data', authenticate, requireAdmin, async (req, res) => {
+router.post('/init-test-data', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     console.log('🚀 开始初始化测试数据...');
     
