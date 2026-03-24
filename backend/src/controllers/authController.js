@@ -60,9 +60,9 @@ exports.register = async (req, res) => {
       await createIndirectReferrals(referrerId, user.id, transaction);
     }
 
-    // 生成二维码
-    const qrCodePath = await generateQRCode(user);
-    user.qrCodeUrl = qrCodePath;
+    // 生成二维码（base64 格式）
+    const qrCodeBase64 = await generateQRCodeBase64(user);
+    user.qrCodeUrl = qrCodeBase64;
     await user.save({ transaction });
 
     await transaction.commit();
