@@ -9,16 +9,17 @@ const hasDatabaseURL = process.env.DATABASE_URL;
 
 let sequelize;
 
-// Railway 或有 DATABASE_URL 时使用 PostgreSQL
-if (hasDatabaseURL || isRailway) {
+// Vercel 或有 DATABASE_URL 或 Railway 时使用 PostgreSQL
+if (isVercel || hasDatabaseURL || isRailway) {
   // 使用 PostgreSQL（Supabase）
   console.log('📊 使用 PostgreSQL 数据库 (Supabase)');
   
-  // Railway 环境变量（按优先级）
+  // 使用环境变量中的 DATABASE_URL
   const dbUrl = process.env.DATABASE_URL || 
                 'postgresql://postgres.kdpgnhpfkyugrlnpmtju:JgdDwJ9iK2Df8hdu@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres';
   
   console.log('DATABASE_URL:', process.env.DATABASE_URL ? '✓ 已设置' : '⚠️ 使用默认值');
+  console.log('Environment:', { isVercel, isRailway, hasDatabaseURL });
   
   sequelize = new Sequelize(dbUrl, {
     dialect: 'postgres',
@@ -26,29 +27,26 @@ if (hasDatabaseURL || isRailway) {
       ssl: {
         require: true,
         rejectUnauthorized: false
-      }
+      },
+      // 增加超时时间
+      requestTimeout: 30000,
+      connectTimeout: 30000
     },
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    logging: false, // 生产环境禁用日志
     define: {
       timestamps: true
     },
     pool: {
-      max: 5,
+      max: 2, // Serverless 环境减少连接池大小
       min: 0,
-      acquire: 30000,
-      idle: 10000
-    }
-  });
-} else if (isVercel) {
-  // Vercel 环境使用 SQLite 内存模式（临时测试）
-  console.log('⚠️ 使用 SQLite 内存模式（数据不会保存，仅用于测试）');
-  sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: ':memory:',
-    logging: false,
-    define: {
-      timestamps: true
-    }
+      acquire: 60000,
+      idle: 10000,
+      create: 60000,
+      destroy: 10000
+    },
+    // 连接超时配置
+    connectionTimeout: 30000,
+    idleTimeout: 10000
   });
 } else {
   // 本地开发使用 SQLite 文件

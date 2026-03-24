@@ -75,9 +75,46 @@ async function startServer() {
   }
 }
 
-// Vercel Serverless 环境不自动启动服务器
-if (process.env.VERCEL !== '1') {
-  startServer();
+// 启动服务器逻辑
+async function bootstrap() {
+  try {
+    // Railway 和生产环境：先启动服务器，再异步初始化数据库
+    if (process.env.NODE_ENV === 'production' || process.env.RAILWAY) {
+      // 先启动服务器，让健康检查立即可用
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`✅ 服务器启动成功：http://0.0.0.0:${PORT}`);
+        console.log(`🌍 环境：${process.env.NODE_ENV || 'production'}`);
+        console.log(`📊 管理后台 API: http://0.0.0.0:${PORT}/api/admin`);
+        console.log(`🛒 商品 API: http://0.0.0.0:${PORT}/api/products`);
+        console.log(`🔐 认证 API: http://0.0.0.0:${PORT}/api/auth`);
+      });
+      
+      // 异步初始化数据库（不阻塞启动）
+      setTimeout(async () => {
+        try {
+          console.log('🔄 正在初始化数据库连接...');
+          await testConnection();
+          await syncDatabase(false);
+          console.log('✅ 数据库初始化完成');
+        } catch (error) {
+          console.error('❌ 数据库初始化失败:', error.message);
+        }
+      }, 1000);
+    } else {
+      // 本地开发：同步启动
+      await testConnection();
+      await syncDatabase(false);
+      app.listen(PORT, () => {
+        console.log(`✅ 服务器启动成功：http://localhost:${PORT}`);
+      });
+    }
+  } catch (error) {
+    console.error('❌ 服务器启动失败:', error);
+    process.exit(1);
+  }
 }
+
+// 启动应用
+bootstrap();
 
 module.exports = app;
