@@ -327,15 +327,42 @@
 
     // API 请求
     async function fetchWithAuth(url, options = {}) {
-      const res = await fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
+      try {
+        const res = await fetch(url, {
+          ...options,
+          headers: {
+            ...options.headers,
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        // 处理 401 未授权错误（密码修改后 token 失效）
+        if (res.status === 401) {
+          console.error('认证失败，token 已失效，请重新登录');
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+          alert('登录已过期，请重新登录');
+          window.location.href = 'login.html';
+          return { code: 401, message: '未授权' };
         }
-      });
-      return res.json();
+        
+        const data = await res.json();
+        
+        // 处理业务逻辑的 401 错误
+        if (data.code === 401) {
+          console.error('认证失败：', data.message);
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+          alert(data.message || '登录已过期，请重新登录');
+          window.location.href = 'login.html';
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('请求失败:', error);
+        throw error;
+      }
     }
 
     // 加载商品列表
