@@ -33,18 +33,20 @@
 
 ## 📸 系统截图
 
+> **提示**: 以下是截图占位符。添加截图后，请使用图床（如 [imgur](https://imgur.com/)、[sm.ms](https://sm.ms/)）上传图片，并替换下方的 URL。
+
 ### 移动端页面
 
 #### 登录注册
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/mobile-login.png" alt="登录页面" width="200"/>
+      <img src="https://via.placeholder.com/200x400/667eea/ffffff?text=Login" alt="登录页面" width="200"/>
       <br/>
       <strong>登录页面</strong>
     </td>
     <td align="center">
-      <img src="./docs/screenshots/mobile-register.png" alt="注册页面" width="200"/>
+      <img src="https://via.placeholder.com/200x400/764ba2/ffffff?text=Register" alt="注册页面" width="200"/>
       <br/>
       <strong>注册页面（支持推荐码）</strong>
     </td>
@@ -55,12 +57,12 @@
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/mobile-home.png" alt="首页商品列表" width="200"/>
+      <img src="https://via.placeholder.com/200x400/4facfe/ffffff?text=Home" alt="首页商品列表" width="200"/>
       <br/>
       <strong>首页商品列表</strong>
     </td>
     <td align="center">
-      <img src="./docs/screenshots/mobile-product-detail.png" alt="商品详情" width="200"/>
+      <img src="https://via.placeholder.com/200x400/00f2fe/ffffff?text=Product" alt="商品详情" width="200"/>
       <br/>
       <strong>商品详情页</strong>
     </td>
@@ -71,12 +73,12 @@
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/mobile-order-list.png" alt="订单列表" width="200"/>
+      <img src="https://via.placeholder.com/200x400/43e97b/ffffff?text=Orders" alt="订单列表" width="200"/>
       <br/>
       <strong>订单列表</strong>
     </td>
     <td align="center">
-      <img src="./docs/screenshots/mobile-order-detail.png" alt="订单详情" width="200"/>
+      <img src="https://via.placeholder.com/200x400/38f9d7/ffffff?text=Order" alt="订单详情" width="200"/>
       <br/>
       <strong>订单详情</strong>
     </td>
@@ -87,24 +89,24 @@
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/mobile-profile.png" alt="个人中心" width="200"/>
+      <img src="https://via.placeholder.com/200x400/f093fb/ffffff?text=Profile" alt="个人中心" width="200"/>
       <br/>
       <strong>个人中心</strong>
     </td>
     <td align="center">
-      <img src="./docs/screenshots/mobile-invite-poster.png" alt="邀请海报" width="200"/>
+      <img src="https://via.placeholder.com/200x400/f5576c/ffffff?text=QRCode" alt="邀请海报" width="200"/>
       <br/>
       <strong>邀请海报（二维码）</strong>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/mobile-referees.png" alt="下级列表" width="200"/>
+      <img src="https://via.placeholder.com/200x400/667eea/ffffff?text=Referees" alt="下级列表" width="200"/>
       <br/>
       <strong>下级列表</strong>
     </td>
     <td align="center">
-      <img src="./docs/screenshots/mobile-commissions.png" alt="佣金记录" width="200"/>
+      <img src="https://via.placeholder.com/200x400/764ba2/ffffff?text=Commissions" alt="佣金记录" width="200"/>
       <br/>
       <strong>佣金记录</strong>
     </td>
@@ -119,7 +121,7 @@
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/admin-login.png" alt="管理后台登录" width="400"/>
+      <img src="https://via.placeholder.com/400x300/1989fa/ffffff?text=Admin+Login" alt="管理后台登录" width="400"/>
       <br/>
       <strong>管理后台登录（带验证码）</strong>
     </td>
@@ -130,7 +132,7 @@
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/admin-dashboard.png" alt="数据统计看板" width="400"/>
+      <img src="https://via.placeholder.com/400x300/0e6fd6/ffffff?text=Dashboard" alt="数据统计看板" width="400"/>
       <br/>
       <strong>数据统计看板</strong>
     </td>
@@ -141,7 +143,7 @@
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/admin-users.png" alt="用户管理" width="400"/>
+      <img src="https://via.placeholder.com/400x300/667eea/ffffff?text=Users" alt="用户管理" width="400"/>
       <br/>
       <strong>用户管理（禁用/启用、重置密码、删除）</strong>
     </td>
@@ -152,7 +154,7 @@
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/admin-products.png" alt="商品管理" width="400"/>
+      <img src="https://via.placeholder.com/400x300/764ba2/ffffff?text=Products" alt="商品管理" width="400"/>
       <br/>
       <strong>商品管理（上下架、编辑、删除）</strong>
     </td>
@@ -163,7 +165,7 @@
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/admin-orders.png" alt="订单管理" width="400"/>
+      <img src="https://via.placeholder.com/400x300/4facfe/ffffff?text=Orders" alt="订单管理" width="400"/>
       <br/>
       <strong>订单管理（查看、发货）</strong>
     </td>
@@ -174,7 +176,7 @@
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/admin-commissions.png" alt="佣金管理" width="400"/>
+      <img src="https://via.placeholder.com/400x300/00f2fe/ffffff?text=Commissions" alt="佣金管理" width="400"/>
       <br/>
       <strong>佣金管理（发放佣金）</strong>
     </td>
@@ -185,12 +187,39 @@
 <table>
   <tr>
     <td align="center">
-      <img src="./docs/screenshots/admin-settings.png" alt="系统配置" width="400"/>
+      <img src="https://via.placeholder.com/400x300/43e97b/ffffff?text=Settings" alt="系统配置" width="400"/>
       <br/>
       <strong>修改密码</strong>
     </td>
   </tr>
 </table>
+
+---
+
+### 📷 如何替换为真实截图
+
+1. **截取系统图片**（参考 `docs/截图指南.md`）
+
+2. **上传到图床**（推荐）:
+   - [Imgur](https://imgur.com/upload) - 无需注册，支持直接链接
+   - [SM.MS](https://sm.ms/) - 免费图床，支持 API
+   - [GitHub Releases](https://github.com/xtit/distribution-system/releases) - 作为附件上传
+   - [阿里云 OSS](https://www.aliyun.com/product/oss) - 付费，稳定可靠
+
+3. **替换 URL**:
+   ```markdown
+   <!-- 替换前 -->
+   <img src="https://via.placeholder.com/200x400/667eea/ffffff?text=Login" />
+   
+   <!-- 替换后 -->
+   <img src="https://i.imgur.com/your-image-id.png" />
+   ```
+
+4. **提交更新**:
+   ```bash
+   git commit -m "更新系统截图"
+   git push
+   ```
 
 ---
 
