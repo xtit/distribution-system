@@ -12,6 +12,7 @@ router.post('/login', authController.login);
 router.get('/me', authMiddleware, authController.getCurrentUser);
 router.put('/profile', authMiddleware, authController.updateProfile);
 router.post('/upload-avatar', authMiddleware, upload.single('avatar'), authController.uploadAvatar);
+router.post('/change-password', authMiddleware, authController.changePassword);
 router.get('/referees', authMiddleware, authController.getReferees);
 router.get('/commissions', authMiddleware, authController.getCommissions);
 router.get('/referral-stats', authMiddleware, authController.getReferralStats);

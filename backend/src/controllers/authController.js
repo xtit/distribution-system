@@ -268,6 +268,54 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+// 修改密码
+exports.changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findByPk(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        code: 404,
+        message: '用户不存在'
+      });
+    }
+
+    // 验证旧密码
+    const isValid = await user.validatePassword(oldPassword);
+    if (!isValid) {
+      return res.status(400).json({
+        code: 400,
+        message: '原密码错误'
+      });
+    }
+
+    // 验证新密码长度
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        code: 400,
+        message: '密码至少 6 位'
+      });
+    }
+
+    // 更新密码
+    user.passwordHash = newPassword; // beforeUpdate 钩子会自动加密
+    await user.save();
+
+    res.json({
+      code: 200,
+      message: '密码修改成功，请重新登录'
+    });
+  } catch (error) {
+    console.error('修改密码失败:', error);
+    res.status(500).json({
+      code: 500,
+      message: '修改密码失败',
+      error: error.message
+    });
+  }
+};
+
 // 上传头像（返回 base64，避免文件存储问题）
 exports.uploadAvatar = async (req, res) => {
   try {

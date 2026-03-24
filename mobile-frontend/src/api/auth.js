@@ -20,6 +20,11 @@ export function updateProfile(data) {
   return request.put('/auth/profile', data)
 }
 
+// 修改密码
+export function changePassword(data) {
+  return request.post('/auth/change-password', data)
+}
+
 // 上传头像
 export function uploadAvatar(file) {
   const formData = new FormData()

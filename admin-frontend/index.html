@@ -175,8 +175,52 @@
     <!-- 系统配置 -->
     <div id="settings" class="section">
       <div class="section-title">⚙️ 系统配置</div>
+      
+      <!-- 修改密码 -->
+      <div style="background: #f7f8fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="font-size: 16px; font-weight: bold; margin-bottom: 16px; color: #333;">
+          🔐 修改密码
+        </div>
+        <div style="max-width: 400px;">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #666;">原密码</label>
+            <input 
+              type="password" 
+              id="oldPassword" 
+              placeholder="请输入原密码"
+              style="width: 100%; padding: 10px; border: 1px solid #e8e8e8; border-radius: 6px; font-size: 14px;"
+            />
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #666;">新密码</label>
+            <input 
+              type="password" 
+              id="newPassword" 
+              placeholder="请输入新密码（至少 6 位）"
+              style="width: 100%; padding: 10px; border: 1px solid #e8e8e8; border-radius: 6px; font-size: 14px;"
+            />
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #666;">确认新密码</label>
+            <input 
+              type="password" 
+              id="confirmPassword" 
+              placeholder="请再次输入新密码"
+              style="width: 100%; padding: 10px; border: 1px solid #e8e8e8; border-radius: 6px; font-size: 14px;"
+            />
+          </div>
+          <button 
+            onclick="changePassword()"
+            class="btn btn-primary"
+            style="width: 100%; padding: 12px; font-size: 15px;"
+          >
+            确认修改
+          </button>
+        </div>
+      </div>
+      
       <div id="settingsContent">
-        <div style="text-align: center; padding: 40px; color: #999;">功能开发中...</div>
+        <div style="text-align: center; padding: 40px; color: #999;">更多配置功能开发中...</div>
       </div>
     </div>
   </div>
@@ -537,34 +581,48 @@
         if (res.code === 200) {
           const users = res.data.list;
           const html = `
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>用户名</th>
-                  <th>昵称</th>
-                  <th>手机</th>
-                  <th>推荐码</th>
-                  <th>上级</th>
-                  <th>余额</th>
-                  <th>状态</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${users.map(u => `
+            <div style="overflow-x: auto;">
+              <table>
+                <thead>
                   <tr>
-                    <td>${u.id}</td>
-                    <td>${u.username}</td>
-                    <td>${u.nickname || '-'}</td>
-                    <td>${u.phone || '-'}</td>
-                    <td>${u.referralCode}</td>
-                    <td>${u.referrer ? u.referrer.username : '-'}</td>
-                    <td>¥${u.balance || 0}</td>
-                    <td><span class="badge ${u.status === 1 ? 'badge-success' : 'badge-danger'}">${u.status === 1 ? '正常' : '禁用'}</span></td>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>昵称</th>
+                    <th>手机</th>
+                    <th>推荐码</th>
+                    <th>上级</th>
+                    <th>余额</th>
+                    <th>状态</th>
+                    <th style="width: 200px;">操作</th>
                   </tr>
-                `).join('')}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  ${users.map(u => `
+                    <tr>
+                      <td>${u.id}</td>
+                      <td>${u.username}</td>
+                      <td>${u.nickname || '-'}</td>
+                      <td>${u.phone || '-'}</td>
+                      <td>${u.referralCode}</td>
+                      <td>${u.referrer ? u.referrer.username : '-'}</td>
+                      <td>¥${u.balance || 0}</td>
+                      <td><span class="badge ${u.status === 1 ? 'badge-success' : 'badge-danger'}">${u.status === 1 ? '正常' : '禁用'}</span></td>
+                      <td>
+                        <div class="action-buttons">
+                          <button class="btn ${u.status === 1 ? 'btn-warning' : 'btn-success'} btn-sm" onclick="toggleUserStatus(${u.id}, ${u.status})">
+                            ${u.status === 1 ? '禁用' : '启用'}
+                          </button>
+                          <button class="btn btn-primary btn-sm" onclick="resetUserPassword(${u.id}, '${u.username}')">
+                            重置密码
+                          </button>
+                          ${u.id !== 1 ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id}, '${u.username}')">删除</button>` : ''}
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
           `;
           container.innerHTML = html;
         } else {
@@ -1094,6 +1152,143 @@
         header.style.position = 'relative';
         header.appendChild(logoutBtn);
       }
+    }
+    
+    // ==================== 修改密码 ====================
+    async function changePassword() {
+      const oldPassword = document.getElementById('oldPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      
+      // 验证
+      if (!oldPassword) {
+        showToast('请输入原密码', 'error');
+        return;
+      }
+      
+      if (!newPassword || newPassword.length < 6) {
+        showToast('新密码至少 6 位', 'error');
+        return;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        showToast('两次输入的新密码不一致', 'error');
+        return;
+      }
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/auth/change-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            oldPassword,
+            newPassword
+          })
+        });
+        
+        if (res.code === 200) {
+          showToast('密码修改成功，请重新登录', 'success');
+          
+          // 清除登录信息并跳转
+          setTimeout(() => {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            window.location.href = 'login.html';
+          }, 1500);
+        } else {
+          showToast('修改失败：' + res.message, 'error');
+        }
+      } catch (error) {
+        showToast('修改错误：' + error.message, 'error');
+      }
+    }
+    
+    // ==================== 用户管理增强 ====================
+    
+    // 禁用/启用用户
+    async function toggleUserStatus(userId, currentStatus) {
+      const newStatus = currentStatus === 1 ? 0 : 1;
+      const actionText = newStatus === 1 ? '启用' : '禁用';
+      
+      showModal(
+        `确认${actionText}用户`,
+        `确定要${actionText}该用户吗？`,
+        async () => {
+          try {
+            const res = await fetchWithAuth(`${API_BASE}/admin/users/${userId}/status`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ status: newStatus })
+            });
+            
+            if (res.code === 200) {
+              showToast(`${actionText}成功`, 'success');
+              await loadUsers();
+            } else {
+              showToast(`${actionText}失败：` + res.message, 'error');
+            }
+          } catch (error) {
+            showToast(`${actionText}错误：` + error.message, 'error');
+          }
+        }
+      );
+    }
+    
+    // 重置用户密码
+    async function resetUserPassword(userId, username) {
+      const newPwd = prompt(`请输入 ${username} 的新密码：`, '123456');
+      if (!newPwd) return;
+      
+      if (newPwd.length < 6) {
+        showToast('密码至少 6 位', 'error');
+        return;
+      }
+      
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/admin/users/${userId}/reset-password`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ password: newPwd })
+        });
+        
+        if (res.code === 200) {
+          showToast('密码重置成功', 'success');
+        } else {
+          showToast('重置失败：' + res.message, 'error');
+        }
+      } catch (error) {
+        showToast('重置错误：' + error.message, 'error');
+      }
+    }
+    
+    // 删除用户
+    async function deleteUser(userId, username) {
+      showModal(
+        '确认删除用户',
+        `⚠️ 确定要删除用户"${username}"吗？<br><br><span style="color: #f44;">此操作不可恢复！</span>`,
+        async () => {
+          try {
+            const res = await fetchWithAuth(`${API_BASE}/admin/users/${userId}`, {
+              method: 'DELETE'
+            });
+            
+            if (res.code === 200) {
+              showToast('删除成功', 'success');
+              await loadUsers();
+            } else {
+              showToast('删除失败：' + res.message, 'error');
+            }
+          } catch (error) {
+            showToast('删除错误：' + error.message, 'error');
+          }
+        }
+      );
     }
   </script>
 </body>
