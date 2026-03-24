@@ -139,26 +139,19 @@ async function createIndirectReferrals(referrerId, newUserId, transaction, level
   }
 }
 
-// 生成用户二维码
-async function generateQRCode(user) {
-  const qrCodeDir = path.join(process.cwd(), 'qrcodes');
-  if (!fs.existsSync(qrCodeDir)) {
-    fs.mkdirSync(qrCodeDir, { recursive: true });
-  }
-
-  const fileName = `user_${user.id}_${Date.now()}.png`;
-  const filePath = path.join(qrCodeDir, fileName);
-  
+// 生成用户二维码（返回 base64 编码）
+async function generateQRCodeBase64(user) {
   // 二维码内容：注册链接 + 推荐码
-  const baseUrl = process.env.BASE_URL || 'http://localhost:3011';
+  const baseUrl = process.env.BASE_URL || 'https://distribution-system-production.up.railway.app';
   const registerUrl = `${baseUrl}/register?ref=${user.referralCode}`;
   
-  await QRCode.toFile(filePath, registerUrl, {
+  // 生成 base64 编码的 PNG
+  const qrCodeDataUrl = await QRCode.toDataURL(registerUrl, {
     width: 300,
     margin: 2
   });
-
-  return `/qrcodes/${fileName}`;
+  
+  return qrCodeDataUrl; // data:image/png;base64,...
 }
 
 // 用户登录
@@ -221,13 +214,13 @@ exports.getCurrentUser = async (req, res) => {
       attributes: { exclude: ['passwordHash'] }
     });
 
-    // 如果用户没有二维码，自动生成
-    if (!user.qrCodeUrl) {
+    // 如果用户没有二维码，自动生成（base64 格式）
+    if (!user.qrCodeUrl || !user.qrCodeUrl.startsWith('data:')) {
       console.log(`用户 ${user.id} 没有二维码，正在生成...`);
-      const qrCodePath = await generateQRCode(user);
-      user.qrCodeUrl = qrCodePath;
+      const qrCodeBase64 = await generateQRCodeBase64(user);
+      user.qrCodeUrl = qrCodeBase64;
       await user.save();
-      console.log(`用户 ${user.id} 二维码生成成功：${qrCodePath}`);
+      console.log(`用户 ${user.id} 二维码生成成功`);
     }
 
     res.json({

@@ -130,15 +130,16 @@ const loadUserData = async () => {
     await userStore.fetchCurrentUser()
     user.value = userStore.user
     
-    // 处理二维码 URL：如果是相对路径，拼接完整 URL
-    if (user.value?.qrCodeUrl) {
-      if (user.value.qrCodeUrl.startsWith('/')) {
+    // 处理二维码 URL：如果是 base64 直接使用，否则使用默认图
+    if (user.value?.qrCodeUrl && user.value.qrCodeUrl.startsWith('data:')) {
+      qrCodeUrl.value = user.value.qrCodeUrl
+    } else {
+      // 如果是旧格式的相对路径，拼接完整 URL（兼容旧数据）
+      if (user.value?.qrCodeUrl && user.value.qrCodeUrl.startsWith('/')) {
         qrCodeUrl.value = API_BASE_URL + user.value.qrCodeUrl
       } else {
-        qrCodeUrl.value = user.value.qrCodeUrl
+        qrCodeUrl.value = 'https://via.placeholder.com/200'
       }
-    } else {
-      qrCodeUrl.value = 'https://via.placeholder.com/200'
     }
   } catch (error) {
     console.error('加载用户信息失败:', error)
