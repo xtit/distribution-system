@@ -1106,8 +1106,16 @@
     
     // 登录检查和拦截
     let isCheckingAuth = false;
+    let hasLoadedDashboard = false;
     
     window.addEventListener('load', () => {
+      // 如果正在检查认证，跳过
+      if (isCheckingAuth) {
+        return;
+      }
+      
+      isCheckingAuth = true;
+      
       // 检查登录状态
       const token = localStorage.getItem('admin_token');
       const userStr = localStorage.getItem('admin_user');
@@ -1138,12 +1146,15 @@
         // 更新界面显示用户信息
         updateUserInterface();
         
-        // 初始化页面（只初始化一次）
-        if (!isCheckingAuth) {
-          isCheckingAuth = true;
-          switchTab('dashboard');
-          loadDashboard();
-        }
+        // 延迟加载 Dashboard，避免闪退
+        setTimeout(() => {
+          if (!hasLoadedDashboard) {
+            hasLoadedDashboard = true;
+            switchTab('dashboard');
+            loadDashboard();
+          }
+        }, 100);
+        
       } catch (e) {
         console.error('解析用户信息失败:', e);
         localStorage.removeItem('admin_token');
