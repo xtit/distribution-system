@@ -39,7 +39,7 @@
 <table>
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/200x400/4facfe/ffffff?text=Home" alt="首页商品列表" width="200"/>
+      <img src="https://raw.githubusercontent.com/xtit/distribution-system/main/docs/screenshots/mobile-home.png" alt="首页商品列表" width="200"/>
       <br/>
       <strong>首页商品列表</strong>
     </td>
@@ -50,7 +50,7 @@
 <table>
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/200x400/43e97b/ffffff?text=Orders" alt="订单列表" width="200"/>
+      <img src="https://raw.githubusercontent.com/xtit/distribution-system/main/docs/screenshots/mobile-orders.png" alt="订单列表" width="200"/>
       <br/>
       <strong>订单列表</strong>
     </td>
@@ -61,7 +61,7 @@
 <table>
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/200x400/f093fb/ffffff?text=Profile" alt="个人中心" width="200"/>
+      <img src="https://raw.githubusercontent.com/xtit/distribution-system/main/docs/screenshots/mobile-profile.png" alt="个人中心" width="200"/>
       <br/>
       <strong>个人中心</strong>
     </td>
@@ -76,7 +76,7 @@
 <table>
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/400x300/1989fa/ffffff?text=Admin+Login" alt="管理后台登录" width="400"/>
+      <img src="https://raw.githubusercontent.com/xtit/distribution-system/main/docs/screenshots/admin-login.png" alt="管理后台登录" width="400"/>
       <br/>
       <strong>管理后台登录（带验证码）</strong>
     </td>
@@ -87,39 +87,12 @@
 <table>
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/400x300/43e97b/ffffff?text=Settings" alt="系统配置" width="400"/>
+      <img src="https://raw.githubusercontent.com/xtit/distribution-system/main/docs/screenshots/admin-settings.png" alt="系统配置" width="400"/>
       <br/>
       <strong>修改密码</strong>
     </td>
   </tr>
 </table>
-
----
-
-### 📷 如何替换为真实截图
-
-> **提示**: 已准备好 5 张截图，请上传到图床后替换下方 URL。
-
-1. **上传到 Imgur**:
-   - 访问：https://imgur.com/upload
-   - 拖拽图片上传
-   - 右键复制图片地址
-
-2. **替换 URL**:
-   ```markdown
-   <!-- 替换前 -->
-   <img src="https://via.placeholder.com/200x400/4facfe/ffffff?text=Home" />
-   
-   <!-- 替换后 -->
-   <img src="https://i.imgur.com/your-image-id.png" />
-   ```
-
-3. **提交更新**:
-   ```bash
-   git add README.md
-   git commit -m "更新系统截图"
-   git push
-   ```
 
 ---
 
