@@ -29,10 +29,11 @@ export function changePassword(data) {
 export function uploadAvatar(file) {
   const formData = new FormData()
   formData.append('avatar', file)
+  
+  // 不设置 Content-Type，让 axios 自动处理（包含 boundary）
   return request.post('/auth/upload-avatar', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
+    // 注意：不要手动设置 Content-Type
+    // axios 会自动设置为 multipart/form-data 并添加 boundary
   })
 }
 

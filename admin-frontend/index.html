@@ -267,11 +267,9 @@
     let products = [];
     let currentAction = null;
 
-    // 页面加载时执行
-    window.addEventListener('DOMContentLoaded', async function() {
+    // 页面加载时执行 - 只打印日志，登录逻辑由 load 事件统一处理
+    window.addEventListener('DOMContentLoaded', function() {
       console.log('✅ 页面加载完成');
-      await login();
-      await loadDashboard(); // 默认加载数据统计
     });
 
     // 切换标签
@@ -327,12 +325,21 @@
 
     // API 请求
     async function fetchWithAuth(url, options = {}) {
+      // 优先从 localStorage 获取最新 token，避免使用过期的全局变量
+      const token = authToken || localStorage.getItem('admin_token');
+      
+      if (!token) {
+        console.warn('fetchWithAuth: 未找到 token，跳转到登录页');
+        window.location.href = 'login.html';
+        return { code: 401, message: '未授权' };
+      }
+      
       try {
         const res = await fetch(url, {
           ...options,
           headers: {
             ...options.headers,
-            'Authorization': `Bearer ${authToken}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
@@ -1104,21 +1111,22 @@
       );
     }
     
-    // 登录检查和拦截
-    let isCheckingAuth = false;
-    let hasLoadedDashboard = false;
+    // 登录检查和拦截 - 简化版，避免重复触发
+    let hasInitialized = false;
     
     window.addEventListener('load', () => {
-      // 如果正在检查认证，跳过
-      if (isCheckingAuth) {
+      // 防止重复执行
+      if (hasInitialized) {
         return;
       }
-      
-      isCheckingAuth = true;
+      hasInitialized = true;
       
       // 检查登录状态
       const token = localStorage.getItem('admin_token');
       const userStr = localStorage.getItem('admin_user');
+      
+      console.log('[load] token:', token ? '存在' : '不存在');
+      console.log('[load] userStr:', userStr);
       
       if (!token || !userStr) {
         // 未登录，跳转到登录页面
@@ -1141,19 +1149,16 @@
         // 已登录，设置全局变量
         window.currentUser = user;
         authToken = token;
-        console.log('管理员已登录:', user.username);
+        console.log('管理员已登录:', user.username, 'token:', token.substring(0, 20) + '...');
         
         // 更新界面显示用户信息
         updateUserInterface();
         
-        // 延迟加载 Dashboard，避免闪退
+        // 延迟一小段时间再加载数据，确保 token 已经准备好
         setTimeout(() => {
-          if (!hasLoadedDashboard) {
-            hasLoadedDashboard = true;
-            switchTab('dashboard');
-            loadDashboard();
-          }
-        }, 100);
+          console.log('[setTimeout] 开始加载 Dashboard');
+          loadDashboard();
+        }, 50);
         
       } catch (e) {
         console.error('解析用户信息失败:', e);

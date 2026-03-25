@@ -17,6 +17,13 @@ request.interceptors.request.use(
     if (userStore.token) {
       config.headers.Authorization = `Bearer ${userStore.token}`
     }
+    
+    // 特殊处理 FormData 请求（文件上传）
+    if (config.data instanceof FormData) {
+      // 不要设置 Content-Type，让浏览器自动设置（包含 boundary）
+      delete config.headers['Content-Type']
+    }
+    
     return config
   },
   error => {

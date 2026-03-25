@@ -102,7 +102,8 @@
             v-model="avatarFileList"
             :max-count="1"
             :after-read="onAvatarRead"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            :capture="false"
           >
             <template #default>
               <div class="avatar-preview" v-if="editForm.avatarUrl">
@@ -176,9 +177,21 @@ const loadUserData = async () => {
     editForm.value.nickname = user.value.nickname || ''
     editForm.value.phone = user.value.phone || ''
     editForm.value.avatarUrl = user.value.avatarUrl || ''
-    if (editForm.value.avatarUrl) {
-      avatarFileList.value = [{ url: editForm.value.avatarUrl }]
+    
+    // 只在已有头像时设置 fileList，否则保持空数组
+    if (editForm.value.avatarUrl && editForm.value.avatarUrl.trim() !== '') {
+      avatarFileList.value = [{
+        url: editForm.value.avatarUrl,
+        isImage: true
+      }]
+    } else {
+      avatarFileList.value = []
     }
+    
+    console.log('用户数据加载完成:', {
+      hasAvatar: !!editForm.value.avatarUrl,
+      fileListLength: avatarFileList.value.length
+    })
   } catch (error) {
     console.error('加载用户信息失败:', error)
   }
@@ -186,20 +199,61 @@ const loadUserData = async () => {
 
 // 头像上传处理
 const onAvatarRead = async (file) => {
+  console.log('开始上传头像:', file)
+  
+  // 检查文件
+  if (!file || !file.file) {
+    showToast('文件无效')
+    return
+  }
+  
+  const imageFile = file.file
+  console.log('文件信息:', {
+    name: imageFile.name,
+    type: imageFile.type,
+    size: imageFile.size
+  })
+  
+  // 检查文件大小（限制 5MB）
+  if (imageFile.size > 5 * 1024 * 1024) {
+    showToast('图片大小不能超过 5MB')
+    return
+  }
+  
+  // 检查文件类型
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(imageFile.type)) {
+    showToast('只支持 JPG、PNG、GIF、WebP 格式')
+    return
+  }
+  
   try {
     showLoadingToast({
       message: '上传中...',
-      forbidClick: true
+      forbidClick: true,
+      duration: 30000
     })
     
     // 调用上传接口
-    const res = await uploadAvatar(file.file)
+    console.log('调用 uploadAvatar API...')
+    const res = await uploadAvatar(imageFile)
+    console.log('上传成功:', res)
     
     editForm.value.avatarUrl = res.data.url
-    showToast('头像上传成功')
+    avatarFileList.value = [{ url: res.data.url }]
+    
+    showToast({
+      message: '上传成功',
+      icon: 'success'
+    })
   } catch (error) {
     console.error('头像上传失败:', error)
-    showToast('上传失败，请重试')
+    const errorMsg = error.response?.data?.message || error.message || '上传失败，请重试'
+    showToast({
+      message: errorMsg,
+      icon: 'fail',
+      duration: 3000
+    })
   } finally {
     closeToast()
   }
