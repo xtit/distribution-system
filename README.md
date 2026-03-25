@@ -16,7 +16,9 @@
 **地址**: https://distribution-system-psi.vercel.app
 
 ### 管理平台
-**暂不提供**
+**地址**: https://distribution-system-admin.vercel.app
+
+> ⚠️ 管理后台账号请联系系统管理员获取
 
 ---
 
@@ -357,19 +359,13 @@ npm run dev
 
 直接打开 `admin-frontend/index.html` 或部署到 Vercel。
 
+管理后台地址：https://distribution-system-admin.vercel.app
+
 ---
 
-## 🔑 默认账号
+## 🔑 测试账号
 
-### 管理后台
-- **用户名**: `admin`
-- **密码**: `admin123`
-- **权限**: 完整管理权限
-
-### 测试用户
-- **用户名**: `testuser`
-- **密码**: `123456`
-- **权限**: 普通用户权限
+> ⚠️ 为保护系统安全，测试账号请联系系统管理员获取
 
 ---
 
