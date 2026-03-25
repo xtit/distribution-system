@@ -117,4 +117,35 @@ async function bootstrap() {
 // 启动应用
 bootstrap();
 
+// 自动执行头像字段迁移（仅执行一次）
+async function runAvatarMigration() {
+  try {
+    // 等待 3 秒，确保数据库连接已建立
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    const { sequelize } = require('./config/database');
+    
+    // 检查字段类型
+    const [results] = await sequelize.query(`DESCRIBE users;`);
+    const avatarField = results.find(r => r.Field === 'avatar_url');
+    
+    if (avatarField && !avatarField.Type.includes('text')) {
+      console.log('🔄 检测到 avatar_url 字段不是 TEXT 类型，正在迁移...');
+      await sequelize.query(`ALTER TABLE users MODIFY COLUMN avatar_url TEXT;`);
+      console.log('✅ avatar_url 字段已迁移为 TEXT 类型');
+    } else if (avatarField && avatarField.Type.includes('text')) {
+      console.log('✅ avatar_url 字段已经是 TEXT 类型，跳过迁移');
+    } else {
+      console.warn('⚠️ 无法检测 avatar_url 字段，请手动检查');
+    }
+  } catch (error) {
+    console.error('❌ 头像字段迁移失败:', error.message);
+  }
+}
+
+// 生产环境自动执行迁移
+if (process.env.NODE_ENV === 'production' || process.env.RAILWAY) {
+  setTimeout(runAvatarMigration, 5000);
+}
+
 module.exports = app;

@@ -31,7 +31,7 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING(50)
   },
   avatarUrl: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.TEXT,
     field: 'avatar_url'
   },
   referrerId: {
